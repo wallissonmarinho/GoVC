@@ -10,29 +10,27 @@ import (
 )
 
 func main() {
-	// Adapters: Input (left side of hexagon)
+	// Adapters: Input
 	cliConfig, err := cli.NewCLIConfig()
 	if err != nil {
 		log.Fatalf("Configuration error: %v", err)
 	}
 
-	// Adapters: Output (right side of hexagon)
+	// Adapters: Output
 	discoveryAdapter := filesystem.NewFilesystemAdapter()
 	converterAdapter := ffmpeg.NewFFmpegAdapter()
 	fileSystemAdapter := filesystem.NewFilesystemAdapter()
 	reporterAdapter := cli.NewLoggerReporter()
 
-	// Core: Application service (use case)
+	// Services (Core)
 	conversionService := services.NewConversionService(
-		discoveryAdapter,
-		converterAdapter,
-		fileSystemAdapter,
-		reporterAdapter,
-		cliConfig,
+		discoveryAdapter, converterAdapter, fileSystemAdapter, reporterAdapter, cliConfig,
 	)
 
-	// Execute
-	if err := conversionService.Execute(); err != nil {
-		log.Fatalf("Conversion failed: %v", err)
-	}
+	// Commands (Adapters)
+	executor := cli.NewCommandExecutor()
+	executor.Register("convert", cli.NewConvertCommand(conversionService, "conversion"))
+
+	// Execute default command
+	_ = executor.Execute("convert")
 }

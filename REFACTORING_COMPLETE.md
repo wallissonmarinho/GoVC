@@ -5,7 +5,7 @@
 ```
 ANTES                              DEPOIS
 ─────────────────────────────────────────────────────────
-1 arquivo monolítico    →    11 arquivos organizados
+1 arquivo monolítico    →    15+ arquivos organizados
 418+ linhas (main.go)   →    150 linhas (cmd/govc/main.go)
 Sem architecture         →    Hexagonal Architecture clara
 Testability: ⭐       →    Testability: ⭐⭐⭐⭐⭐
@@ -33,19 +33,34 @@ GoVC/
 │   │   │   ├── video.go
 │   │   │   ├── conversion.go
 │   │   │   └── progress.go
-│   │   ├── ports/                        ← Interfaces (Contracts)
-│   │   │   └── ports.go (5 ports)
+│   │   ├── ports/                        ← Interfaces (Contracts) - ONE PER FILE
+│   │   │   ├── config.go
+│   │   │   ├── executor.go
+│   │   │   ├── file_system.go
+│   │   │   ├── progress_reporter.go
+│   │   │   ├── service_command.go
+│   │   │   ├── video_converter.go
+│   │   │   ├── video_discovery.go
+│   │   │   └── command_executor.go
 │   │   └── services/                     ← Use Cases
 │   │       └── conversion_service.go
 │   │
 │   └── adapters/                         ← Implementações Concretas
 │       ├── cli/                          ← Input Adapter
 │       │   ├── config.go
-│       │   └── logger.go
+│       │   ├── logger.go
+│       │   ├── command_executor.go       ← NEW: Orchestrates commands
+│       │   ├── convert_command.go        ← NEW: Wraps ConversionService
+│       │   ├── config_mock.go
+│       │   ├── logger_mock.go
+│       │   ├── command_executor_mock.go  ← NEW: Mock for testing
+│       │   └── convert_command_mock.go   ← NEW: Mock for testing
 │       ├── filesystem/                   ← Output Adapter
-│       │   └── adapter.go
+│       │   ├── adapter.go
+│       │   └── adapter_mock.go
 │       └── ffmpeg/                       ← Output Adapter
-│           └── adapter.go
+│           ├── adapter.go
+│           └── adapter_mock.go
 │
 ├── 📄 main.go                            ← Stub (aponta para cmd/govc)
 └── 📦 go.mod
@@ -147,20 +162,32 @@ service := services.NewConversionService(..., mockConverter, ...)
 
 ### Core Domain (11 arquivos Go)
 
-| Arquivo                          | Linhas   | Responsabilidade                 |
-| -------------------------------- | -------- | -------------------------------- |
-| `domain/video.go`                | ~45      | Entity Video                   |
-| `domain/conversion.go`           | ~30      | Entity ConversionResult          |
-| `domain/progress.go`             | ~45      | Entity ProgressTracker           |
-| `ports/ports.go`                 | ~50      | 5 Interfaces (contracts)         |
-| `services/conversion_service.go` | ~100     | Use Case principal               |
-| `adapters/cli/config.go`         | ~50      | Input: CLI Config                |
-| `adapters/cli/logger.go`         | ~50      | Output: Logger Reporter          |
-| `adapters/filesystem/adapter.go` | ~100     | Output: File System              |
-| `adapters/ffmpeg/adapter.go`     | ~150     | Output: FFmpeg Converter         |
-| `cmd/govc/main.go`               | ~45      | Bootstrap (Dependency Injection) |
-| `main.go` (root)                 | ~3       | Stub                             |
-| **TOTAL**                        | **~630** | ✅ Bem organizado                |
+| Arquivo                               | Linhas   | Responsabilidade                   |
+| ------------------------------------- | -------- | ---------------------------------- |
+| `domain/video.go`                     | ~45      | Entity Video                       |
+| `domain/conversion.go`                | ~30      | Entity ConversionResult            |
+| `domain/progress.go`                  | ~45      | Entity ProgressTracker             |
+| `ports/config.go`                     | ~10      | ConfigPort interface               |
+| `ports/executor.go`                   | ~10      | Executor interface                 |
+| `ports/file_system.go`                | ~15      | FileSystemPort interface           |
+| `ports/progress_reporter.go`          | ~15      | ProgressReporterPort interface     |
+| `ports/service_command.go`            | ~10      | ServiceCommand interface           |
+| `ports/video_converter.go`            | ~15      | VideoConverterPort interface       |
+| `ports/video_discovery.go`            | ~10      | VideoDiscoveryPort interface       |
+| `ports/command_executor.go`           | ~10      | CommandExecutorPort interface      |
+| `services/conversion_service.go`      | ~100     | Use Case principal                 |
+| `adapters/cli/config.go`              | ~50      | Input: CLI Config                  |
+| `adapters/cli/logger.go`              | ~50      | Output: Logger Reporter            |
+| `adapters/cli/command_executor.go`    | ~40      | Orchestrates command execution     |
+| `adapters/cli/convert_command.go`     | ~25      | Wraps ConversionService as command |
+| `adapters/cli/*_mock.go` (4 files)    | ~40      | Mocks for testing                  |
+| `adapters/filesystem/adapter.go`      | ~100     | Output: File System                |
+| `adapters/filesystem/adapter_mock.go` | ~35      | Mock for testing                   |
+| `adapters/ffmpeg/adapter.go`          | ~150     | Output: FFmpeg Converter           |
+| `adapters/ffmpeg/adapter_mock.go`     | ~25      | Mock for testing                   |
+| `cmd/govc/main.go`                    | ~45      | Bootstrap (Dependency Injection)   |
+| `main.go` (root)                      | ~3       | Stub                               |
+| **TOTAL**                             | **~750** | ✅ Bem organizado                  |
 
 ---
 
@@ -185,7 +212,7 @@ go run ./cmd/govc -p 2 -logs=false /caminho/videos
 | Arquivo                       | Conteúdo                                 |
 | ----------------------------- | ---------------------------------------- |
 | **README.md**                 | Quick start, flags, examples, requisitos |
-| **HEXAGONAL_ARCHITECTURE.md** | Detalhes da architecture Hexagonal        |
+| **HEXAGONAL_ARCHITECTURE.md** | Detalhes da architecture Hexagonal       |
 | **EXTENSION_GUIDE.md**        | Como adicionar novos adapters            |
 | **PROJECT_STATUS.md**         | Status, métricas, componentes            |
 
@@ -227,14 +254,14 @@ go run ./cmd/govc -p 2 -logs=false /caminho/videos
 
 ## 🎯 Resumo Final
 
-| Aspecto               | Status          |
-| --------------------- | --------------- |
-| Clean Code            | ✅ Aplicado     |
+| Aspecto                | Status          |
+| ---------------------- | --------------- |
+| Clean Code             | ✅ Aplicado     |
 | Hexagonal Architecture | ✅ Implementada |
-| Testability         | ✅ Alta         |
+| Testability            | ✅ Alta         |
 | Documentation          | ✅ Completa     |
-| Build Status          | ✅ OK           |
-| Pronto para Produção  | ✅ Sim          |
+| Build Status           | ✅ OK           |
+| Pronto para Produção   | ✅ Sim          |
 
 ---
 

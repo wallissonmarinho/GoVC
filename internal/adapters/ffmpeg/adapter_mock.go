@@ -1,9 +1,8 @@
 package ffmpeg
 
 import (
-	"github.com/wallissonmarinho/GoVC/internal/core/domain"
-	"github.com/wallissonmarinho/GoVC/internal/core/ports"
 	"github.com/stretchr/testify/mock"
+	"github.com/wallissonmarinho/GoVC/internal/core/domain"
 )
 
 // MockFFmpegAdapter is a mock implementation of VideoConverterPort for testing
@@ -25,6 +24,3 @@ func (m *MockFFmpegAdapter) HasExternalSubtitles(video *domain.Video, inputDir s
 	args := m.Called(video, inputDir)
 	return args.Bool(0)
 }
-
-// Ensure MockFFmpegAdapter implements VideoConverterPort
-var _ ports.VideoConverterPort = (*MockFFmpegAdapter)(nil)

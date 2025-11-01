@@ -18,18 +18,33 @@ GoVC/
 │   │   │   ├── video.go
 │   │   │   ├── conversion.go
 │   │   │   └── progress.go
-│   │   ├── ports/               ← Interfaces (abstract contracts)
-│   │   │   └── ports.go         ← VideoDiscoveryPort, ConverterPort, etc.
+│   │   ├── ports/               ← Interfaces (abstract contracts) - ONE PER FILE
+│   │   │   ├── config.go
+│   │   │   ├── executor.go
+│   │   │   ├── file_system.go
+│   │   │   ├── progress_reporter.go
+│   │   │   ├── service_command.go
+│   │   │   ├── video_converter.go
+│   │   │   ├── video_discovery.go
+│   │   │   └── command_executor.go
 │   │   └── services/            ← Use Cases (application)
 │   │       └── conversion_service.go
 │   └── adapters/                ← Concrete implementations
 │       ├── cli/                 ← Input: CLI arguments
 │       │   ├── config.go        ← Implements ConfigPort
-│       │   └── logger.go        ← Implements ProgressReporterPort
+│       │   ├── logger.go        ← Implements ProgressReporterPort
+│       │   ├── command_executor.go       ← Implements CommandExecutorPort
+│       │   ├── convert_command.go        ← Implements ServiceCommand
+│       │   ├── config_mock.go   ← Mock for testing
+│       │   ├── logger_mock.go   ← Mock for testing
+│       │   ├── command_executor_mock.go  ← Mock for testing
+│       │   └── convert_command_mock.go   ← Mock for testing
 │       ├── filesystem/          ← Output: File system operations
-│       │   └── adapter.go       ← Implements VideoDiscoveryPort, FileSystemPort
+│       │   ├── adapter.go       ← Implements VideoDiscoveryPort, FileSystemPort
+│       │   └── adapter_mock.go  ← Mock for testing
 │       └── ffmpeg/              ← Output: Converter tool
-│           └── adapter.go       ← Implements VideoConverterPort
+│           ├── adapter.go       ← Implements VideoConverterPort
+│           └── adapter_mock.go  ← Mock for testing
 ├── main.go                      ← Stub (points to cmd/govc)
 ├── go.mod
 └── README.md
@@ -43,16 +58,18 @@ GoVC/
 
 - **Domain**: Pure entities, no external dependencies
   - `Video`, `ConversionResult`, `ProgressTracker`
-- **Ports**: Interfaces that define contracts
-  - `VideoDiscoveryPort`, `VideoConverterPort`, `FileSystemPort`, `ProgressReporterPort`, `ConfigPort`
+- **Ports**: Interfaces that define contracts (one interface per file)
+  - `ConfigPort`, `Executor`, `FileSystemPort`, `ProgressReporterPort`, `ServiceCommand`, `VideoConverterPort`, `VideoDiscoveryPort`, `CommandExecutorPort`
 - **Services**: Use Cases that orchestrate domain + ports
   - `ConversionService` (does orchestration, nothing more)
 
 #### 2️⃣ **Adapters (Sides — Inputs)**
 
-- **CLI** (`internal/adapters/cli/`): Reads user arguments
+- **CLI** (`internal/adapters/cli/`): Reads user arguments and commands
   - `CLIConfig` → implements `ConfigPort`
   - `LoggerReporter` → implements `ProgressReporterPort`
+  - `CommandExecutor` → implements `CommandExecutorPort` (orchestrates commands)
+  - `ConvertCommand` → implements `ServiceCommand` (wraps ConversionService)
 
 #### 3️⃣ **Adapters (Sides — Outputs)**
 

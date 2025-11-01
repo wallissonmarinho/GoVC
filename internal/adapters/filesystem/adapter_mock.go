@@ -1,9 +1,8 @@
 package filesystem
 
 import (
-	"github.com/wallissonmarinho/GoVC/internal/core/domain"
-	"github.com/wallissonmarinho/GoVC/internal/core/ports"
 	"github.com/stretchr/testify/mock"
+	"github.com/wallissonmarinho/GoVC/internal/core/domain"
 )
 
 // MockFilesystemAdapter is a mock implementation of VideoDiscoveryPort and FileSystemPort for testing
@@ -45,7 +44,3 @@ func (m *MockFilesystemAdapter) WriteLog(logPath string, lines []string) error {
 	args := m.Called(logPath, lines)
 	return args.Error(0)
 }
-
-// Ensure MockFilesystemAdapter implements VideoDiscoveryPort and FileSystemPort
-var _ ports.VideoDiscoveryPort = (*MockFilesystemAdapter)(nil)
-var _ ports.FileSystemPort = (*MockFilesystemAdapter)(nil)
