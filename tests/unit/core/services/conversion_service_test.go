@@ -15,50 +15,40 @@ import (
 	"github.com/wallissonmarinho/GoVC/internal/core/services"
 )
 
-// resetMocks clears all expectations from all mocks
-func resetMocks(
-	mockDiscovery *filesystem.MockFilesystemAdapter,
-	mockConverter *ffmpeg.MockFFmpegAdapter,
-	mockFileSystem *filesystem.MockFilesystemAdapter,
-	mockReporter *cli.MockLoggerReporter,
-	mockConfig *cli.MockCLIConfig,
-) {
-	mockDiscovery.ExpectedCalls = nil
-	mockDiscovery.Calls = nil
-	mockConverter.ExpectedCalls = nil
-	mockConverter.Calls = nil
-	mockFileSystem.ExpectedCalls = nil
-	mockFileSystem.Calls = nil
-	mockReporter.ExpectedCalls = nil
-	mockReporter.Calls = nil
-	mockConfig.ExpectedCalls = nil
-	mockConfig.Calls = nil
-}
-
 // TestConversionService is the main test suite for ConversionService
 func TestConversionService(t *testing.T) {
-	mockDiscovery := new(filesystem.MockFilesystemAdapter)
-	mockConverter := new(ffmpeg.MockFFmpegAdapter)
-	mockFileSystem := new(filesystem.MockFilesystemAdapter)
-	mockReporter := new(cli.MockLoggerReporter)
-	mockConfig := new(cli.MockCLIConfig)
-
-	service := services.NewConversionService(
-		mockDiscovery,
-		mockConverter,
-		mockFileSystem,
-		mockReporter,
-		mockConfig,
-	)
-
 	t.Run("NewConversionService", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		assert.NotNil(t, service)
 	})
 
 	t.Run("ExecuteNoVideosFound", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		mockConfig.On("GetInputDir").Return("/input")
 		mockDiscovery.On("FindVideos", "/input").Return([]*domain.Video{}, nil)
@@ -74,7 +64,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteDiscoveryError", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		mockConfig.On("GetInputDir").Return("/input")
 		mockDiscovery.On("FindVideos", "/input").Return(nil, errors.New("discovery failed"))
@@ -88,7 +90,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteCreateOutputDirError", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 		mockConfig.On("GetInputDir").Return("/input")
@@ -105,7 +119,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteSingleVideoConversionSuccess", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 
@@ -136,7 +162,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteConversionFailure", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 
@@ -159,13 +197,26 @@ func TestConversionService(t *testing.T) {
 
 		err := service.Execute()
 
-		assert.NoError(t, err)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "conversion completed with 1 error(s)")
 		mockConfig.AssertExpectations(t)
 		mockDiscovery.AssertExpectations(t)
 	})
 
 	t.Run("ExecuteInvalidOutput", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 
@@ -190,13 +241,26 @@ func TestConversionService(t *testing.T) {
 
 		err := service.Execute()
 
-		assert.NoError(t, err)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "conversion completed with 1 error(s)")
 		mockConfig.AssertExpectations(t)
 		mockDiscovery.AssertExpectations(t)
 	})
 
 	t.Run("ExecuteMultipleVideos", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video1 := domain.NewVideo("/input/test1.mkv", "/output")
 		video2 := domain.NewVideo("/input/test2.mkv", "/output")
@@ -229,7 +293,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteWithLogsEnabled", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 
@@ -260,7 +336,19 @@ func TestConversionService(t *testing.T) {
 	})
 
 	t.Run("ExecuteWithExternalSubtitles", func(t *testing.T) {
-		resetMocks(mockDiscovery, mockConverter, mockFileSystem, mockReporter, mockConfig)
+		mockDiscovery := new(filesystem.MockFilesystemAdapter)
+		mockConverter := new(ffmpeg.MockFFmpegAdapter)
+		mockFileSystem := new(filesystem.MockFilesystemAdapter)
+		mockReporter := new(cli.MockLoggerReporter)
+		mockConfig := new(cli.MockCLIConfig)
+
+		service := services.NewConversionService(
+			mockDiscovery,
+			mockConverter,
+			mockFileSystem,
+			mockReporter,
+			mockConfig,
+		)
 
 		video := domain.NewVideo("/input/test.mkv", "/output")
 

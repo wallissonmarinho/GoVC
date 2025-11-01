@@ -18,6 +18,8 @@ type ConversionService struct {
 	fileSystem ports.FileSystemPort
 	reporter   ports.ProgressReporterPort
 	config     ports.ConfigPort
+	failCount  int
+	mu         sync.Mutex
 }
 
 // NewConversionService creates a new conversion service.
@@ -85,6 +87,12 @@ func (cs *ConversionService) Execute() error {
 	}
 
 	wg.Wait()
+
+	// Return error if any conversions failed
+	if cs.failCount > 0 {
+		return fmt.Errorf("conversion completed with %d error(s)", cs.failCount)
+	}
+
 	return nil
 }
 
@@ -98,12 +106,18 @@ func (cs *ConversionService) convertVideo(video *domain.Video, tracker *domain.P
 	if err := cs.converter.ConvertWithProgress(video, cs.config.GetInputDir(), func(percent float64) {
 		tracker.Update(video.BaseName, percent)
 	}); err != nil {
+		cs.mu.Lock()
+		cs.failCount++
+		cs.mu.Unlock()
 		cs.reporter.ReportError(fmt.Sprintf("Failed to convert %s: %v", video.Filename(), err))
 		return
 	}
 
 	// Validate output
 	if !cs.fileSystem.IsValidOutput(video.OutputPath()) {
+		cs.mu.Lock()
+		cs.failCount++
+		cs.mu.Unlock()
 		cs.reporter.ReportError(fmt.Sprintf("Output file invalid for %s", video.Filename()))
 		return
 	}

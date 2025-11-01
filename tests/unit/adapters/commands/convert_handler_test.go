@@ -57,7 +57,7 @@ func TestConvertCommandHandler(t *testing.T) {
 		}
 
 		assert.NotNil(t, logsFlag)
-		assert.True(t, logsFlag.Value) // Default should be true
+		assert.False(t, logsFlag.Value) // Default should be false (delete logs)
 	})
 
 	t.Run("BuildCommand_HasDescription", func(t *testing.T) {

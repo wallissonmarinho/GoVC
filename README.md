@@ -19,14 +19,20 @@ go build -o govc ./cmd/govc
 ./govc --help
 ./govc convert --help
 
-# Convert with default settings (uses system CPU count)
+# Convert with default settings (uses system CPU count, deletes logs)
 ./govc convert /path/to/videos
 
-# Convert with 4 parallel workers
+# Convert with 4 parallel workers (deletes logs by default)
 ./govc convert -p 4 /path/to/videos
 
-# Without saving temporary logs
-./govc convert -p 4 --logs=false /path/to/videos
+# Keep logs (with alias -l, implicitly true)
+./govc convert -p 4 -l /path/to/videos
+
+# Keep logs (with alias -l=true, explicitly)
+./govc convert -p 4 -l=true /path/to/videos
+
+# Keep logs (with flag name --logs)
+./govc convert -p 4 --logs /path/to/videos
 
 # With go run
 go run ./cmd/govc convert -p 4 /path/to/videos
@@ -44,10 +50,10 @@ go run ./cmd/govc convert -p 4 /path/to/videos
 - **Default**: number of CPUs on the machine
 - Recommended: `-p 2` on machines with few cores, `-p 4` on modern machines
 
-**`--logs BOOLEAN`** (Boolean)
+**`-l, --logs BOOLEAN`** (Boolean)
 
 - **Default**: `false` - deletes successful logs after conversion (keeps error logs)
-- **With `--logs` or `--logs=true`**: keeps logs in `mp4/<name>.log` for each converted video
+- **With `-l`, `--logs` or `--logs=true`**: keeps logs in `mp4/<name>.log` for each converted video
 - **Note**: Error logs are always kept for diagnostics (regardless of flag)
 - Logs contain ffmpeg stderr output for troubleshooting
 

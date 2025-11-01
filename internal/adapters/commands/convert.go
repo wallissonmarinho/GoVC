@@ -84,9 +84,10 @@ func (h *ConvertCommandHandler) BuildCommand() *urfavecli.Command {
 				Usage:   "Number of parallel workers (default: number of CPUs)",
 			},
 			&urfavecli.BoolFlag{
-				Name:  "logs",
-				Value: false,
-				Usage: "Keep per-file logs (default: delete successful logs)",
+				Name:    "logs",
+				Aliases: []string{"l"},
+				Value:   false,
+				Usage:   "Keep per-file logs (default: delete successful logs)",
 			},
 		},
 		Action: h.Execute,

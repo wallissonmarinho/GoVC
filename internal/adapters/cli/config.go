@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"flag"
 	"fmt"
 	"path/filepath"
-	"runtime"
 
 	"github.com/wallissonmarinho/GoVC/internal/core/ports"
 )
@@ -15,31 +13,6 @@ type CLIConfig struct {
 	outputDir string
 	workers   int
 	saveLogs  bool
-}
-
-// NewCLIConfig creates a new CLI configuration by parsing flags.
-// Deprecated: Use NewCLIConfigFromContext instead.
-func NewCLIConfig() (*CLIConfig, error) {
-	workers := flag.Int("p", runtime.NumCPU(), "number of parallel ffmpeg processes")
-	saveLogs := flag.Bool("logs", false, "save per-file ffmpeg logs to mp4/*.log")
-	flag.Parse()
-
-	args := flag.Args()
-	if len(args) < 1 {
-		return nil, fmt.Errorf("usage: govc [-p <num_workers>] [--logs] <directory>\n  --logs: keep FFmpeg logs (by default logs are deleted after successful conversion)")
-	}
-
-	dir := args[0]
-	if *workers < 1 {
-		*workers = 1
-	}
-
-	return &CLIConfig{
-		inputDir:  dir,
-		outputDir: filepath.Join(dir, "mp4"),
-		workers:   *workers,
-		saveLogs:  *saveLogs,
-	}, nil
 }
 
 // NewCLIConfigFromContext creates a new CLI configuration from urfave/cli context.
