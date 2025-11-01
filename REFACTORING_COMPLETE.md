@@ -198,11 +198,14 @@ service := services.NewConversionService(..., mockConverter, ...)
 cd /Users/wallissonmarinho/www/GoVC
 go build -o govc ./cmd/govc
 
-# 2. Run
-./govc -p 4 /caminho/videos
+# 2. Run with command flag
+./govc -cmd convert -p 4 /caminho/videos
 
-# 3. Ou direto com go run
-go run ./cmd/govc -p 2 -logs=false /caminho/videos
+# 3. Or default (convert is default command)
+./govc /caminho/videos
+
+# 4. Or directly with go run
+go run ./cmd/govc -cmd convert -p 2 -logs=false /caminho/videos
 ```
 
 ---

@@ -110,17 +110,25 @@ go build -o govc ./cmd/govc
 #### Run
 
 ```bash
-./govc -p 4 -logs=true /path/with/videos.mkv
+# With explicit command flag
+./govc -cmd convert -p 4 -logs=true /path/with/videos.mkv
 ```
 
-Or directly:
+Or directly (convert is default):
 
 ```bash
-go run ./cmd/govc -p 4 /path/with/videos.mkv
+./govc /path/with/videos.mkv
+```
+
+Or with go run:
+
+```bash
+go run ./cmd/govc -cmd convert -p 4 /path/with/videos.mkv
 ```
 
 **Flags:**
 
+- `-cmd` : command to execute (default: `convert`)
 - `-p N` : number of parallel workers (default: #CPUs)
 - `-logs=true|false` : keep per-file logs in mp4/ directory (default: true; false deletes successful logs)
 

@@ -16,13 +16,16 @@ go build -o govc ./cmd/govc
 
 ```bash
 # Convert with 4 parallel workers (default: number of CPUs)
-./govc -p 4 /path/to/videos
+./govc -cmd convert -p 4 /path/to/videos
 
 # Without saving temporary logs
-./govc -p 4 -logs=false /path/to/videos
+./govc -cmd convert -p 4 -logs=false /path/to/videos
 
 # Direct with go run
-go run ./cmd/govc -p 4 /path/to/videos
+go run ./cmd/govc -cmd convert -p 4 /path/to/videos
+
+# Or default (convert is default command)
+./govc /path/to/videos
 ```
 
 ---
@@ -127,7 +130,7 @@ choco install ffmpeg
 ### Example 1: Simple Conversion
 
 ```bash
-go run ./cmd/govc /videos
+go run ./cmd/govc -cmd convert /videos
 ```
 
 - Uses all CPUs
@@ -136,7 +139,7 @@ go run ./cmd/govc /videos
 ### Example 2: Control Workers and Logs
 
 ```bash
-go run ./cmd/govc -p 2 -logs=false /videos
+go run ./cmd/govc -cmd convert -p 2 -logs=false /videos
 ```
 
 - 2 parallel workers
@@ -147,7 +150,7 @@ go run ./cmd/govc -p 2 -logs=false /videos
 
 ```bash
 go build -o govc-v1.0 ./cmd/govc
-./govc-v1.0 -p 4 /media/movies
+./govc-v1.0 -cmd convert -p 4 /media/movies
 ```
 
 ---
