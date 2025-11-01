@@ -1,57 +1,206 @@
-# GoVC
+# GoVC — MKV to MP4 Batch Converter
 
-Ferramenta simples para converter arquivos MKV para MP4 em lote, com paralelismo e suporte a legendas.
+**Professional tool in Go with Hexagonal Architecture to batch convert MKV files to MP4, with parallelism and subtitle support.**
 
-Principais comportamentos
+---
 
-- Paralelismo: use `-p N` para controlar quantos processos `ffmpeg` rodam simultaneamente. Padrão: número de CPUs.
-- Logs: por padrão o programa salva logs temporários por arquivo em `mp4/<nome>.log`. Use `-logs=false` para desativar.
-- Remoção de logs: quando `-logs=true`, os arquivos `.log` são removidos automaticamente ao final da conversão do respectivo vídeo apenas se a conversão teve sucesso e o arquivo MP4 de saída existir com tamanho > 0. Caso contrário, o `.log` é mantido para diagnóstico.
+## 🚀 Quick Start
 
-# GoVC
-
-Simple batch MKV → MP4 converter with parallel processing and subtitle handling.
-
-Key behaviors
-
-- Parallelism: use `-p N` to control how many ffmpeg processes run in parallel. Default: number of CPUs.
-- Logs: by default the program writes a per-file temporary log to `mp4/<name>.log`. Use `-logs=false` to disable log files.
-- Log removal: when `-logs=true`, a `.log` file is removed automatically after the corresponding conversion finishes only if the conversion succeeded and the output MP4 exists and has size > 0. Otherwise the `.log` is kept for debugging.
-
-Subtitles
-
-- The tool attempts to include both embedded (internal) and external subtitles (a `.srt` file with the same base name):
-  - Internal subtitle streams are mapped with `-map 0:s?` (optional mapping).
-  - If a `name.srt` exists, it is added as an extra input and mapped with `-map 1:s?`.
-  - Text-based subtitles are converted to `mov_text` (MP4-compatible) using `-c:s mov_text`.
-
-Important limitations
-
-- Image-based subtitles (PGS, VobSub) cannot be converted to `mov_text`. In those cases the program does not burn-in the subtitles automatically — such subtitles will be ignored as text tracks.
-- If you want automatic burn-in of image-based subtitles, that requires re-encoding the video (much slower). I can add that option if you want.
-
-Requirements
-
-- `ffmpeg` and `ffprobe` must be installed and available in your PATH.
-
-Usage examples
-
-- Convert using 4 parallel processes and keep temporary logs (default):
+### Build
 
 ```bash
-go run main.go -p 4 /path/to/folder
+go build -o govc ./cmd/govc
 ```
 
-- Convert using 2 parallel processes and do not save per-file logs (ffmpeg stderr will be shown in the terminal):
+### Run
 
 ```bash
-go run main.go -p 2 -logs=false /path/to/folder
+# Convert with 4 parallel workers (default: number of CPUs)
+./govc -p 4 /path/to/videos
+
+# Without saving temporary logs
+./govc -p 4 -logs=false /path/to/videos
+
+# Direct with go run
+go run ./cmd/govc -p 4 /path/to/videos
 ```
 
-Notes
+---
 
-- Temporary log files are useful for debugging failed conversions — they are preserved when an error occurs.
-- Future improvements I can add on request:
-  - Automatic detection and reporting of subtitle streams that can't be converted (before deleting logs),
-  - `--burn` option to burn image-based subtitles into the video via re-encode,
-  - `--log-dir` option to choose a custom directory for logs instead of `mp4/`.
+## 📋 Behaviors
+
+### Parallelism
+
+- Use `-p N` to control how many `ffmpeg` processes run simultaneously
+- **Default**: number of CPUs on the machine
+- Recommended: `-p 2` on machines with few cores, `-p 4` on modern machines
+
+### Logs
+
+- **By default** (`-logs=true`): keeps logs in `mp4/<name>.log` for each converted video
+- **Delete logs** with `-logs=false`: temporary logs are removed after successful conversion
+- **Error logs** are always kept for diagnostics (regardless of `-logs` flag)
+- Logs contain ffmpeg stderr output for troubleshooting
+
+### Subtitles
+
+Supports **two types**:
+
+1. **Embedded**: internal subtitles in MKV (mapped automatically)
+2. **External**: `.srt` file with same name as video
+   - Example: `video.mkv` → looks for `video.srt`
+   - Both are converted to `mov_text` (MP4 compatible)
+
+⚠️ **Limitation**: Image-based subtitles (PGS, VobSub) are not supported (would require re-encoding)
+
+---
+
+## 🏛️ Architecture
+
+This project follows **Hexagonal Architecture (Ports & Adapters)** for maximum testability and extensibility:
+
+```
+┌─────────────────────────────────────────┐
+│         CLI Input Adapter               │
+└────────────────────┬────────────────────┘
+                     │
+                     ↓
+       ┌─────────────────────────┐
+       │  ConversionService      │ ← Use Case (core)
+       │  (Orchestration)        │
+       └────────┬──────┬─────────┘
+                │      │
+        ┌───────┘      └────────┐
+        ↓                       ↓
+   Filesystem           FFmpeg Adapter
+   (Video Discovery)    (Converter)
+```
+
+**Benefits**:
+
+- ✅ **Testable**: Mock adapters without running real ffmpeg
+- ✅ **Decoupled**: Replace ffmpeg with another tool? New adapter, done
+- ✅ **Scalable**: Add REST API? New input adapter
+- ✅ **Readable**: Structure reflects business domain
+
+---
+
+## 📁 Code Structure
+
+```
+GoVC/
+├── cmd/govc/main.go                    ← Entry point (Bootstrap)
+├── internal/core/
+│   ├── domain/                         ← Pure entities (Video, Conversion)
+│   ├── ports/ports.go                  ← Interfaces (contracts)
+│   └── services/conversion_service.go  ← Use case
+└── internal/adapters/
+    ├── cli/                            ← Input: CLI
+    ├── filesystem/                     ← Output: File system
+    └── ffmpeg/                         ← Output: Converter
+```
+
+For detailed documentation → see `HEXAGONAL_ARCHITECTURE.md`
+
+---
+
+## 📦 Requirements
+
+- **Go 1.20+**
+- **ffmpeg** and **ffprobe** installed and in PATH
+
+```bash
+# macOS
+brew install ffmpeg
+
+# Linux (Ubuntu/Debian)
+sudo apt-get install ffmpeg
+
+# Windows (with Chocolatey)
+choco install ffmpeg
+```
+
+---
+
+## 💡 Usage Examples
+
+### Example 1: Simple Conversion
+
+```bash
+go run ./cmd/govc /videos
+```
+
+- Uses all CPUs
+- Saves logs in `/videos/mp4/`
+
+### Example 2: Control Workers and Logs
+
+```bash
+go run ./cmd/govc -p 2 -logs=false /videos
+```
+
+- 2 parallel workers
+- Deletes successful logs after conversion
+- Error logs are still kept
+
+### Example 3: Release Build
+
+```bash
+go build -o govc-v1.0 ./cmd/govc
+./govc-v1.0 -p 4 /media/movies
+```
+
+---
+
+## 🧪 Testing
+
+To test the domain in isolation (without ffmpeg):
+
+```go
+package domain
+
+import "testing"
+
+func TestProgressTracker(t *testing.T) {
+    tracker := domain.NewProgressTracker(3)
+    tracker.Update("video1", 50)
+    if tracker.GetSnapshot()["video1"] != 50 {
+        t.Fatal("Progress not updated")
+    }
+}
+```
+
+All adapters can be mocked for pure unit tests.
+
+---
+
+## 🔧 Extending
+
+Adding a new adapter is simple. Example: support for HTTP API to submit conversions:
+
+1. Create `internal/adapters/http/adapter.go`
+2. Implement `ConfigPort` to read config via HTTP
+3. Inject into `ConversionService` (in bootstrap)
+
+For complete guide → see `EXTENSION_GUIDE.md`
+
+---
+
+## 📝 Changelog
+
+- **v1.0** (current): Refactoring with Hexagonal Architecture
+  - ✅ Pure core domain
+  - ✅ Well-defined ports
+  - ✅ Decoupled adapters
+  - ✅ Testable and extensible
+
+---
+
+## 📖 References
+
+- [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/)
+- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+
+---
+
+**Developed with focus on Clean Code and Quality Architecture.**
