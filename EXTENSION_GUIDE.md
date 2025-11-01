@@ -6,429 +6,813 @@ This guide shows how to extend the system without breaking anything!This guide s
 
 ---
 
-## 🔌 Case 1: Adding a New Output Adapter (Ex: S3)## 🔌 Case 1: Adding a New Output Adapter (Ex: S3)
+## 🔌 Case 1: Adding a New Output Adapter (Ex: S3)## 🔌 Case 1: Adding a New Output Adapter (Ex: S3)## 🔌 Case 1: Adding a New Output Adapter (Ex: S3)
 
-### Problem### Problem
+### Problem### Problem### Problem
 
-You want to save converted videos directly to S3 instead of local filesystem.You want to save converted videos directly to S3 instead of local filesystem.
+You want to save converted videos directly to S3 instead of local filesystem.You want to save converted videos directly to S3 instead of local filesystem.You want to save converted videos directly to S3 instead of local filesystem.
 
-### Solution### Solution
+### Solution### Solution### Solution
 
-1. **Extend the interface** in `ports/ports.go` (if needed)1. **Extend the interface** in `ports/ports.go` (if needed)
+1. **Extend the interface** in `ports/ports.go` (if needed)1. **Extend the interface** in `ports/ports.go` (if needed)1. **Extend the interface** in `ports/ports.go` (if needed)
 
-2. **Create new adapter** in `internal/adapters/s3/`2. **Create new adapter** in `internal/adapters/s3/`
+2. **Create new adapter** in `internal/adapters/s3/`
 
-3. **Inject in bootstrap** in `cmd/govc/main.go`3. **Inject in bootstrap** in `cmd/govc/main.go`
+3. **Inject in bootstrap** in `cmd/govc/main.go`2. **Create new adapter** in `internal/adapters/s3/`2. **Create new adapter** in `internal/adapters/s3/`
 
-### Step by Step### Passo a Passo
+### Step by Step3. **Inject in bootstrap** in `cmd/govc/main.go`3. **Inject in bootstrap** in `cmd/govc/main.go`
 
-#### 1️⃣ Create the S3 adapter (`internal/adapters/s3/adapter.go`)#### 1️⃣ Criar o adapter S3 (`internal/adapters/s3/adapter.go`)
+#### 1️⃣ Create the S3 Adapter (`internal/adapters/s3/adapter.go`)### Step by Step### Passo a Passo
+
+```go#### 1️⃣ Create the S3 adapter (`internal/adapters/s3/adapter.go`)#### 1️⃣ Criar o adapter S3 (`internal/adapters/s3/adapter.go`)
+
+package s3
 
 `go`go
 
-package s3package s3
+import (
 
-import (import (
+    "github.com/wallissonmarinho/GoVC/internal/core/domain"package s3package s3
 
-    "github.com/wallissonmarinho/GoVC/internal/core/domain"    "github.com/wallissonmarinho/GoVC/internal/core/domain"
+    "github.com/wallissonmarinho/GoVC/internal/core/ports"
+
+    "github.com/aws/aws-sdk-go/aws"import (import (
+
+    "github.com/aws/aws-sdk-go/aws/session"
+
+    "github.com/aws/aws-sdk-go/service/s3/s3manager"    "github.com/wallissonmarinho/GoVC/internal/core/domain"    "github.com/wallissonmarinho/GoVC/internal/core/domain"
+
+)
 
     "github.com/wallissonmarinho/GoVC/internal/core/ports"    "github.com/wallissonmarinho/GoVC/internal/core/ports"
 
-    "github.com/aws/aws-sdk-go/aws"    "github.com/aws/aws-sdk-go/aws"
+// Ensure S3Adapter implements FileSystemPort
 
-    "github.com/aws/aws-sdk-go/aws/session"    "github.com/aws/aws-sdk-go/aws/session"
+var \_ ports.FileSystemPort = (\*S3Adapter)(nil) "github.com/aws/aws-sdk-go/aws" "github.com/aws/aws-sdk-go/aws"
 
-    "github.com/aws/aws-sdk-go/service/s3/s3manager"    "github.com/aws/aws-sdk-go/service/s3/s3manager"
+type S3Adapter struct { "github.com/aws/aws-sdk-go/aws/session" "github.com/aws/aws-sdk-go/aws/session"
+
+    bucket   string
+
+    uploader *s3manager.Uploader    "github.com/aws/aws-sdk-go/service/s3/s3manager"    "github.com/aws/aws-sdk-go/service/s3/s3manager"
+
+}
 
 ))
 
-// Ensure S3Adapter implements FileSystemPort// Ensure S3Adapter implements FileSystemPort
+func NewS3Adapter(bucket string) (\*S3Adapter, error) {
 
-var _ ports.FileSystemPort = (\*S3Adapter)(nil)var _ ports.FileSystemPort = (\*S3Adapter)(nil)
+    sess, err := session.NewSession(&aws.Config{})// Ensure S3Adapter implements FileSystemPort// Ensure S3Adapter implements FileSystemPort
+
+    if err != nil {
+
+        return nil, errvar _ ports.FileSystemPort = (\*S3Adapter)(nil)var _ ports.FileSystemPort = (\*S3Adapter)(nil)
+
+    }
 
 type S3Adapter struct {type S3Adapter struct {
 
-    bucket   string    bucket string
+    return &S3Adapter{
 
-    uploader *s3manager.Uploader    uploader *s3manager.Uploader
+        bucket:   bucket,    bucket   string    bucket string
+
+        uploader: s3manager.NewUploader(sess),
+
+    }, nil    uploader *s3manager.Uploader    uploader *s3manager.Uploader
+
+}
 
 }}
 
-func NewS3Adapter(bucket string) (*S3Adapter, error) {func NewS3Adapter(bucket string) (*S3Adapter, error) {
+func (s \*S3Adapter) FileExists(path string) bool {
 
-    sess, err := session.NewSession(&aws.Config{})    sess, err := session.NewSession(&aws.Config{})
+    // Check if file exists in S3func NewS3Adapter(bucket string) (*S3Adapter, error) {func NewS3Adapter(bucket string) (*S3Adapter, error) {
 
-    if err != nil {    if err != nil {
+    return false
 
-        return nil, err        return nil, err
+} sess, err := session.NewSession(&aws.Config{}) sess, err := session.NewSession(&aws.Config{})
+
+func (s \*S3Adapter) IsValidOutput(path string) bool { if err != nil { if err != nil {
+
+    // Validate path in S3
+
+    return true        return nil, err        return nil, err
+
+}
 
     }    }
 
+func (s \*S3Adapter) RemoveFile(path string) error {
+
+    // Remove file from S3
+
+    return nil
+
+} return &S3Adapter{ return &S3Adapter{
+
+func (s \*S3Adapter) WriteLog(logPath string, lines []string) error { bucket: bucket, bucket: bucket,
+
+    // Write log to S3
+
+    return nil        uploader: s3manager.NewUploader(sess),        uploader: s3manager.NewUploader(sess),
+
+}
+
+`````}, nil    }, nil
 
 
-    return &S3Adapter{    return &S3Adapter{
 
-        bucket:   bucket,        bucket:   bucket,
+#### 2️⃣ Update Bootstrap (`cmd/govc/main.go`)}}
 
-        uploader: s3manager.NewUploader(sess),        uploader: s3manager.NewUploader(sess),
 
-    }, nil    }, nil
 
-}}
+```gofunc (s *S3Adapter) FileExists(path string) bool {func (s *S3Adapter) FileExists(path string) bool {
 
-func (s *S3Adapter) FileExists(path string) bool {func (s *S3Adapter) FileExists(path string) bool {
+import (
 
-    // Implement S3 check    // Implementar check em S3
+    "log"    // Implement S3 check    // Implementar check em S3
 
-    return false    return false
+    "github.com/wallissonmarinho/GoVC/internal/adapters/cli"
 
-}}
+    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"    return false    return false
+
+    "github.com/wallissonmarinho/GoVC/internal/adapters/s3"      // ← NEW
+
+    "github.com/wallissonmarinho/GoVC/internal/core/services"}}
+
+)
 
 func (s *S3Adapter) IsValidOutput(path string) bool {func (s *S3Adapter) IsValidOutput(path string) bool {
 
-    // Validate in S3    // Validar em S3
+func main() {
 
-    return true    return true
+    cliConfig, err := cli.NewCLIConfig()    // Validate in S3    // Validar em S3
+
+    if err != nil {
+
+        log.Fatalf("Config error: %v", err)    return true    return true
+
+    }
 
 }}
+
+    converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})
 
 func (s *S3Adapter) RemoveFile(path string) error {func (s *S3Adapter) RemoveFile(path string) error {
 
-    // Remove from S3    // Remover em S3
+    // Replace Filesystem with S3
 
-    return nil    return nil
+    fileSystemAdapter, err := s3.NewS3Adapter("my-bucket")    // Remove from S3    // Remover em S3
 
-}}
+    if err != nil {
 
-func (s *S3Adapter) WriteLog(logPath string, lines []string) error {func (s *S3Adapter) WriteLog(logPath string, lines []string) error {
+        log.Fatalf("S3 error: %v", err)    return nil    return nil
 
-    // Write log to S3    // Escrever log em S3
-
-    return nil    return nil
+    }
 
 }}
 
-````
+    reporterAdapter := cli.NewLoggerReporter()
+
+    discoveryAdapter := filesystem.NewFilesystemAdapter()func (s *S3Adapter) WriteLog(logPath string, lines []string) error {func (s *S3Adapter) WriteLog(logPath string, lines []string) error {
 
 
 
-#### 2️⃣ Update Bootstrap (`cmd/govc/main.go`)#### 2️⃣ Atualizar Bootstrap (`cmd/govc/main.go`)
+    service := services.NewConversionService(    // Write log to S3    // Escrever log em S3
+
+        discoveryAdapter,
+
+        converterAdapter,    return nil    return nil
+
+        fileSystemAdapter,  // ← Now S3!
+
+        reporterAdapter,}}
+
+        cliConfig,
+
+    )````
 
 
 
-```go```go
+    if err := service.Execute(); err != nil {
 
-import (import (
+        log.Fatalf("Error: %v", err)
 
-    "log"    "log"
+    }#### 2️⃣ Update Bootstrap (`cmd/govc/main.go`)#### 2️⃣ Atualizar Bootstrap (`cmd/govc/main.go`)
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/cli"    "github.com/wallissonmarinho/GoVC/internal/adapters/cli"
+}
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"
+`````
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/s3"      // ← NEW    "github.com/wallissonmarinho/GoVC/internal/adapters/s3"      // ← NEW
+**Done!** Videos now save to S3, without touching anything else.`go`go
 
-    "github.com/wallissonmarinho/GoVC/internal/core/services"    "github.com/wallissonmarinho/GoVC/internal/core/services"
+---import (import (
 
-))
+## 🌐 Case 2: Adding a New Input Adapter (Ex: HTTP API) "log" "log"
 
+### Problem "github.com/wallissonmarinho/GoVC/internal/adapters/cli" "github.com/wallissonmarinho/GoVC/internal/adapters/cli"
 
+You want the system to accept HTTP requests to convert videos. "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg" "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"
 
-func main() {func main() {
+### Solution "github.com/wallissonmarinho/GoVC/internal/adapters/s3" // ← NEW "github.com/wallissonmarinho/GoVC/internal/adapters/s3" // ← NEW
 
-    cliConfig, err := cli.NewCLIConfig()    cliConfig, err := cli.NewCLIConfig()
+1. **Create new adapter** in `internal/adapters/http/` "github.com/wallissonmarinho/GoVC/internal/core/services" "github.com/wallissonmarinho/GoVC/internal/core/services"
+
+2. **Implement ConfigPort** and **VideoDiscoveryPort**
+
+3. **New bootstrap in** `cmd/api/main.go`))
+
+### Step by Step
+
+#### 1️⃣ Create HTTP Adapter (`internal/adapters/http/config.go`)func main() {func main() {
+
+`````go cliConfig, err := cli.NewCLIConfig()    cliConfig, err := cli.NewCLIConfig()
+
+package http
 
     if err != nil {    if err != nil {
 
-        log.Fatalf("Config error: %v", err)        log.Fatalf("Config error: %v", err)
+// HTTPConfig implements ConfigPort
 
-    }    }
+type HTTPConfig struct {        log.Fatalf("Config error: %v", err)        log.Fatalf("Config error: %v", err)
 
+    inputDir  string
 
+    outputDir string    }    }
+
+    workers   int
+
+    saveLogs  bool
+
+}
 
     converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})    converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})
 
+func (h *HTTPConfig) GetInputDir() string {
 
+    return h.inputDir
+
+}
 
     // ✨ New: S3 instead of Filesystem    // ✨ Novo: S3 em vez de Filesystem
 
-    fileSystemAdapter, err := s3.NewS3Adapter("my-bucket")    fileSystemAdapter, err := s3.NewS3Adapter("my-bucket")
+func (h *HTTPConfig) GetOutputDir() string {
+
+    return h.outputDir    fileSystemAdapter, err := s3.NewS3Adapter("my-bucket")    fileSystemAdapter, err := s3.NewS3Adapter("my-bucket")
+
+}
 
     if err != nil {    if err != nil {
 
-        log.Fatalf("S3 error: %v", err)        log.Fatalf("S3 error: %v", err)
+func (h *HTTPConfig) GetWorkers() int {
+
+    return h.workers        log.Fatalf("S3 error: %v", err)        log.Fatalf("S3 error: %v", err)
+
+}
 
     }    }
 
+func (h *HTTPConfig) IsSaveLogs() bool {
+
+    return h.saveLogs
+
+}
+
+```    reporterAdapter := cli.NewLoggerReporter()    reporterAdapter := cli.NewLoggerReporter()
 
 
-    reporterAdapter := cli.NewLoggerReporter()    reporterAdapter := cli.NewLoggerReporter()
 
-    discoveryAdapter := filesystem.NewFilesystemAdapter()    discoveryAdapter := filesystem.NewFilesystemAdapter()
+#### 2️⃣ Create HTTP Handler (`internal/adapters/http/handler.go`)    discoveryAdapter := filesystem.NewFilesystemAdapter()    discoveryAdapter := filesystem.NewFilesystemAdapter()
 
 
+
+```go
+
+package http
 
     service := services.NewConversionService(    service := services.NewConversionService(
 
-        discoveryAdapter,        discoveryAdapter,
+import (
 
-        converterAdapter,        converterAdapter,
+    "encoding/json"        discoveryAdapter,        discoveryAdapter,
+
+    "net/http"
+
+    "github.com/wallissonmarinho/GoVC/internal/core/services"        converterAdapter,        converterAdapter,
+
+)
 
         fileSystemAdapter,  // ← Now S3!        fileSystemAdapter,  // ← Agora S3!
 
-        reporterAdapter,        reporterAdapter,
+type ConversionRequest struct {
 
-        cliConfig,        cliConfig,
+    VideoPath string `json:"video_path"`        reporterAdapter,        reporterAdapter,
 
-    )    )
+    Workers   int    `json:"workers,omitempty"`
+
+}        cliConfig,        cliConfig,
 
 
+
+func ConvertHandler(service *services.ConversionService) http.HandlerFunc {    )    )
+
+    return func(w http.ResponseWriter, r *http.Request) {
+
+        var req ConversionRequest
+
+        json.NewDecoder(r.Body).Decode(&req)
 
     if err := service.Execute(); err != nil {    if err := service.Execute(); err != nil {
 
-        log.Fatalf("Error: %v", err)        log.Fatalf("Error: %v", err)
+        // Execute conversion
 
-    }    }
+        err := service.Execute()        log.Fatalf("Error: %v", err)        log.Fatalf("Error: %v", err)
 
-}}
 
-````
 
-**Done!** Videos now save to S3, without touching anything else.**Pronto!** Vídeos agora salvam em S3, sem tocar em nada else.
+        w.Header().Set("Content-Type", "application/json")    }    }
+
+        json.NewEncoder(w).Encode(map[string]interface{}{
+
+            "success": err == nil,}}
+
+            "error":   err,
+
+        })````
+
+    }
+
+}**Done!** Videos now save to S3, without touching anything else.**Pronto!** Vídeos agora salvam em S3, sem tocar em nada else.
+
+`````
 
 ---
 
+#### 3️⃣ Create API Bootstrap (`cmd/api/main.go`)
+
 ## 🌐 Case 2: Adding a New Input Adapter (Ex: HTTP API)## 🌐 Caso 2: Adicionar um Novo Adapter de Input (Ex: HTTP API)
 
-### Problem### Problema
+```go
 
-You want the system to accept HTTP requests to convert videos.Você quer que o sistema aceite requisições HTTP para converter vídeos.
+package main### Problem### Problema
 
-### Solution### Solução
 
-1. **Create new adapter** in `internal/adapters/http/`1. **Criar novo adapter** em `internal/adapters/http/`
 
-2. **Implement ConfigPort** and **VideoDiscoveryPort**2. **Implementar ConfigPort** e **VideoDiscoveryPort**
+import (You want the system to accept HTTP requests to convert videos.Você quer que o sistema aceite requisições HTTP para converter vídeos.
+
+    "log"
+
+    "net/http"### Solution### Solução
+
+    "github.com/wallissonmarinho/GoVC/internal/adapters/http"
+
+    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"1. **Create new adapter** in `internal/adapters/http/`1. **Criar novo adapter** em `internal/adapters/http/`
+
+    "github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"
+
+    "github.com/wallissonmarinho/GoVC/internal/core/services"2. **Implement ConfigPort** and **VideoDiscoveryPort**2. **Implementar ConfigPort** e **VideoDiscoveryPort**
+
+)
 
 3. **New bootstrap in** `cmd/api/main.go`3. **Bootstrap novo em** `cmd/api/main.go`
 
-### Step by Step### Passo a Passo
+func main() {
 
-#### 1️⃣ Create HTTP adapter (`internal/adapters/http/config.go`)#### 1️⃣ Criar HTTP adapter (`internal/adapters/http/config.go`)
+    httpConfig := &http.HTTPConfig{### Step by Step### Passo a Passo
 
-`go`go
+        inputDir:  "/videos",
+
+        outputDir: "/videos/output",#### 1️⃣ Create HTTP adapter (`internal/adapters/http/config.go`)#### 1️⃣ Criar HTTP adapter (`internal/adapters/http/config.go`)
+
+        workers:   4,
+
+        saveLogs:  true,`go`go
+
+    }
 
 package httppackage http
 
-// HTTPConfig implements ConfigPort// HTTPConfig implementa ConfigPort
+    discoveryAdapter := filesystem.NewFilesystemAdapter()
 
-type HTTPConfig struct {type HTTPConfig struct {
+    converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})// HTTPConfig implements ConfigPort// HTTPConfig implementa ConfigPort
 
-    inputDir  string    inputDir  string
+    fileSystemAdapter := filesystem.NewFilesystemAdapter()
 
-    outputDir string    outputDir string
+    reporterAdapter := http.NewHTTPReporter()type HTTPConfig struct {type HTTPConfig struct {
 
-    workers   int    workers   int
 
-    saveLogs  bool    saveLogs  bool
 
-}}
+    service := services.NewConversionService(    inputDir  string    inputDir  string
+
+        discoveryAdapter,
+
+        converterAdapter,    outputDir string    outputDir string
+
+        fileSystemAdapter,
+
+        reporterAdapter,    workers   int    workers   int
+
+        httpConfig,
+
+    )    saveLogs  bool    saveLogs  bool
+
+
+
+    // HTTP Routes}}
+
+    http.HandleFunc("/convert", http.ConvertHandler(service))
 
 func (h *HTTPConfig) GetInputDir() string {func (h *HTTPConfig) GetInputDir() string {
 
-    return h.inputDir    return h.inputDir
+    log.Fatal(http.ListenAndServe(":8080", nil))
+
+}    return h.inputDir    return h.inputDir
+
+```
 
 }}
 
-// ... etc// ... etc
+**Now you have:**
 
-````
+- CLI: `go run ./cmd/govc -p 4 /path`// ... etc// ... etc
+
+- HTTP API: `curl -X POST http://localhost:8080/convert`
+
+`````
+
+---
 
 
+
+## 🔄 Case 3: Replace FFmpeg with MediaInfo
 
 #### 2️⃣ Create HTTP handler (`internal/adapters/http/handler.go`)#### 2️⃣ Criar HTTP handler (`internal/adapters/http/handler.go`)
 
+### Problem
 
+
+
+You want to use `mediainfo` instead of `ffmpeg` to extract metadata.
 
 ```go```go
+
+### Solution
 
 package httppackage http
 
+**Create new adapter** `internal/adapters/mediainfo/adapter.go` implementing `VideoConverterPort`.
 
 
-import (import (
 
-    "encoding/json"    "encoding/json"
+```go
 
-    "net/http"    "net/http"
+package mediainfoimport (import (
+
+
+
+import (    "encoding/json"    "encoding/json"
+
+    "os/exec"
+
+    "github.com/wallissonmarinho/GoVC/internal/core/domain"    "net/http"    "net/http"
+
+)
 
     "github.com/wallissonmarinho/GoVC/internal/core/services"    "github.com/wallissonmarinho/GoVC/internal/core/services"
 
+type MediaInfoAdapter struct{}
+
 ))
 
+func (m *MediaInfoAdapter) Convert(video *domain.Video, inputDir string) error {
 
+    // Use mediainfo instead of ffmpeg
 
-type ConversionRequest struct {type ConversionRequest struct {
+    cmd := exec.Command("mediainfo", video.Path)
+
+    return cmd.Run()type ConversionRequest struct {type ConversionRequest struct {
+
+}
 
     VideoPath string `json:"video_path"`    VideoPath string `json:"video_path"`
 
-    Workers   int    `json:"workers,omitempty"`    Workers   int    `json:"workers,omitempty"`
+func (m *MediaInfoAdapter) GetDuration(videoPath string) (float64, error) {
 
-}}
+    // Parse mediainfo output    Workers   int    `json:"workers,omitempty"`    Workers   int    `json:"workers,omitempty"`
+
+    return 0, nil
+
+}}}
+
+```
 
 
+
+**Then, just replace in bootstrap:**
 
 func ConvertHandler(service *services.ConversionService) http.HandlerFunc {func ConvertHandler(service *services.ConversionService) http.HandlerFunc {
 
-    return func(w http.ResponseWriter, r *http.Request) {    return func(w http.ResponseWriter, r *http.Request) {
+```go
+
+converterAdapter := mediainfo.NewMediaInfoAdapter() // ← New!    return func(w http.ResponseWriter, r *http.Request) {    return func(w http.ResponseWriter, r *http.Request) {
+
+```
 
         var req ConversionRequest        var req ConversionRequest
 
+---
+
         json.NewDecoder(r.Body).Decode(&req)        json.NewDecoder(r.Body).Decode(&req)
 
+## 🗄️ Case 4: Add Database (PostgreSQL)
 
+
+
+### New Adapter
 
         // Execute conversion        // Execute conversion
 
+Create `internal/adapters/postgres/adapter.go` to track conversions in DB.
+
         err := service.Execute()        err := service.Execute()
 
+```go
+
+package postgres
 
 
-        w.Header().Set("Content-Type", "application/json")        w.Header().Set("Content-Type", "application/json")
 
-        json.NewEncoder(w).Encode(map[string]interface{}{        json.NewEncoder(w).Encode(map[string]interface{}{
+import (        w.Header().Set("Content-Type", "application/json")        w.Header().Set("Content-Type", "application/json")
+
+    "database/sql"
+
+    _ "github.com/lib/pq"        json.NewEncoder(w).Encode(map[string]interface{}{        json.NewEncoder(w).Encode(map[string]interface{}{
+
+)
 
             "success": err == nil,            "success": err == nil,
 
-            "error":   err,            "error":   err,
+type PostgresAdapter struct {
+
+    db *sql.DB            "error":   err,            "error":   err,
+
+}
 
         })        })
 
-    }    }
+func NewPostgresAdapter(connStr string) (*PostgresAdapter, error) {
 
-}}
+    db, err := sql.Open("postgres", connStr)    }    }
 
-````
+    if err != nil {
+
+        return nil, err}}
+
+    }
+
+    return &PostgresAdapter{db: db}, nil````
+
+}
 
 #### 3️⃣ Create API bootstrap (`cmd/api/main.go`)#### 3️⃣ Criar bootstrap API (`cmd/api/main.go`)
 
-`go`go
+func (p *PostgresAdapter) LogConversion(filename string, success bool) error {
 
-package mainpackage main
+    _, err := p.db.Exec(`go`go
 
-import (import (
+        "INSERT INTO conversions (filename, success, timestamp) VALUES ($1, $2, NOW())",
 
-    "log"    "log"
+        filename, success,package mainpackage main
 
-    "net/http"    "net/http"
+    )
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/http"    "github.com/wallissonmarinho/GoVC/internal/adapters/http"
+    return errimport (import (
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"
+}
 
-    "github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"    "github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"
+```    "log"    "log"
 
-    "github.com/wallissonmarinho/GoVC/internal/core/services"    "github.com/wallissonmarinho/GoVC/internal/core/services"
 
-))
 
-func main() {func main() {
+**Use in service** (can extend `ProgressReporterPort` or create new port).    "net/http"    "net/http"
 
-    httpConfig := &http.HTTPConfig{    httpConfig := &http.HTTPConfig{
 
-        inputDir:  "/videos",        inputDir:  "/videos",
 
-        outputDir: "/videos/output",        outputDir: "/videos/output",
+---    "github.com/wallissonmarinho/GoVC/internal/adapters/http"    "github.com/wallissonmarinho/GoVC/internal/adapters/http"
 
-        workers:   4,        workers:   4,
+
+
+## 📊 Quick Reference    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"    "github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"
+
+
+
+### Add New Adapter (Checklist)    "github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"    "github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"
+
+
+
+- [ ] Create folder: `internal/adapters/new_adapter/`    "github.com/wallissonmarinho/GoVC/internal/core/services"    "github.com/wallissonmarinho/GoVC/internal/core/services"
+
+- [ ] Create file: `adapter.go`
+
+- [ ] Implement relevant interface(s) from `ports/ports.go`))
+
+- [ ] Add assertion: `var _ ports.YourPort = (*YourAdapter)(nil)`
+
+- [ ] Update bootstrap in `cmd/govc/main.go`func main() {func main() {
+
+- [ ] Build & test: `go build ./cmd/govc`
+
+- [ ] Document usage in your README    httpConfig := &http.HTTPConfig{    httpConfig := &http.HTTPConfig{
+
+
+
+---        inputDir:  "/videos",        inputDir:  "/videos",
+
+
+
+## 🧪 Test New Adapter (Mock)        outputDir: "/videos/output",        outputDir: "/videos/output",
+
+
+
+```go        workers:   4,        workers:   4,
+
+package main
 
         saveLogs:  true,        saveLogs:  true,
 
-    }    }
+import (
+
+    "testing"    }    }
+
+    "github.com/wallissonmarinho/GoVC/internal/adapters/your_adapter"
+
+)
 
 
 
-    discoveryAdapter := filesystem.NewFilesystemAdapter()    discoveryAdapter := filesystem.NewFilesystemAdapter()
+func TestYourAdapter(t *testing.T) {    discoveryAdapter := filesystem.NewFilesystemAdapter()    discoveryAdapter := filesystem.NewFilesystemAdapter()
+
+    adapter := your_adapter.New()
 
     converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})    converterAdapter := ffmpeg.NewFFmpegAdapter(func(p float64) {})
 
-    fileSystemAdapter := filesystem.NewFilesystemAdapter()    fileSystemAdapter := filesystem.NewFilesystemAdapter()
+    // Test method
 
-    reporterAdapter := http.NewHTTPReporter()    reporterAdapter := http.NewHTTPReporter()
-
-
-
-    service := services.NewConversionService(    service := services.NewConversionService(
-
-        discoveryAdapter,        discoveryAdapter,
-
-        converterAdapter,        converterAdapter,
-
-        fileSystemAdapter,        fileSystemAdapter,
-
-        reporterAdapter,        reporterAdapter,
-
-        httpConfig,        httpConfig,
-
-    )    )
+    result, err := adapter.YourMethod()    fileSystemAdapter := filesystem.NewFilesystemAdapter()    fileSystemAdapter := filesystem.NewFilesystemAdapter()
 
 
 
-    // HTTP Routes    // HTTP Routes
+    if err != nil {    reporterAdapter := http.NewHTTPReporter()    reporterAdapter := http.NewHTTPReporter()
 
-    http.HandleFunc("/convert", http.ConvertHandler(service))    http.HandleFunc("/convert", http.ConvertHandler(service))
+        t.Fatalf("Error: %v", err)
+
+    }
 
 
 
-    log.Fatal(http.ListenAndServe(":8080", nil))    log.Fatal(http.ListenAndServe(":8080", nil))
+    if result != expected {    service := services.NewConversionService(    service := services.NewConversionService(
+
+        t.Errorf("got %v, want %v", result, expected)
+
+    }        discoveryAdapter,        discoveryAdapter,
+
+}
+
+```        converterAdapter,        converterAdapter,
+
+
+
+---        fileSystemAdapter,        fileSystemAdapter,
+
+
+
+## 📈 Escalation Path        reporterAdapter,        reporterAdapter,
+
+
+
+```        httpConfig,        httpConfig,
+
+Phase 1: CLI (current) ✅
+
+└─ cmd/govc/main.go    )    )
+
+
+
+Phase 2: Add HTTP API
+
+└─ cmd/api/main.go
+
+└─ internal/adapters/http/    // HTTP Routes    // HTTP Routes
+
+
+
+Phase 3: Add Web UI    http.HandleFunc("/convert", http.ConvertHandler(service))    http.HandleFunc("/convert", http.ConvertHandler(service))
+
+└─ cmd/web/main.go
+
+└─ internal/adapters/web/
+
+
+
+Phase 4: Add Database    log.Fatal(http.ListenAndServe(":8080", nil))    log.Fatal(http.ListenAndServe(":8080", nil))
+
+└─ internal/adapters/postgres/
 
 }}
 
-````
+Phase 5: Add Cloud Storage
+
+└─ internal/adapters/s3/````
+
+└─ internal/adapters/gcs/
 
 
 
-**Now you have**:**Agora você tem**:
+→ ALL with SAME core logic!
+
+```**Now you have**:**Agora você tem**:
 
 
 
-- CLI: `go run ./cmd/govc -p 4 /path`- CLI: `go run ./cmd/govc -p 4 /path`
-
-- HTTP API: `curl -X POST http://localhost:8080/convert`- HTTP API: `curl -X POST http://localhost:8080/convert`
+---
 
 
+
+## 🚀 Example: Your Own Extension- CLI: `go run ./cmd/govc -p 4 /path`- CLI: `go run ./cmd/govc -p 4 /path`
+
+
+
+**Want to add feature X? Follow this template:**- HTTP API: `curl -X POST http://localhost:8080/convert`- HTTP API: `curl -X POST http://localhost:8080/convert`
+
+
+
+```go
+
+package your_adapter
 
 ------
 
-
-
-## 🔄 Case 3: Replace FFmpeg with MediaInfo## 🔄 Caso 3: Trocar FFmpeg por MediaInfo
-
-
-
-### Problem### Problema
+import "github.com/wallissonmarinho/GoVC/internal/core/ports"
 
 
 
-You want to use `mediainfo` instead of `ffmpeg` to extract metadata.Você quer usar `mediainfo` em vez de `ffmpeg` para extrair metadados.
+// Declare which port you implement
+
+var _ ports.YourPort = (*YourAdapter)(nil)## 🔄 Case 3: Replace FFmpeg with MediaInfo## 🔄 Caso 3: Trocar FFmpeg por MediaInfo
 
 
 
-### Solution### Solução
+type YourAdapter struct {
+
+    // Your configuration
+
+}### Problem### Problema
 
 
 
-**Create new adapter** `internal/adapters/mediainfo/adapter.go` implementing `VideoConverterPort`.**Criar novo adapter** `internal/adapters/mediainfo/adapter.go` implementando `VideoConverterPort`.
+func New() *YourAdapter {
+
+    return &YourAdapter{}
+
+}You want to use `mediainfo` instead of `ffmpeg` to extract metadata.Você quer usar `mediainfo` em vez de `ffmpeg` para extrair metadados.
 
 
+
+// Implement all methods from ports.YourPort
+
+func (s *YourAdapter) Method1() error {
+
+    // TODO: Your logic### Solution### Solução
+
+    return nil
+
+}
+
+
+
+func (s *YourAdapter) Method2() string {**Create new adapter** `internal/adapters/mediainfo/adapter.go` implementing `VideoConverterPort`.**Criar novo adapter** `internal/adapters/mediainfo/adapter.go` implementando `VideoConverterPort`.
+
+    // TODO: Your logic
+
+    return ""
+
+}
 
 ```go```go
 
-package mediainfopackage mediainfo
+// Add in bootstrap (cmd/govc/main.go)
+
+// adapter := your_adapter.New()package mediainfopackage mediainfo
+
+```
 
 
+
+---
 
 import (import (
+
+**Easy extension, without breaking anything!** 🎉
 
     "os/exec"    "os/exec"
 
@@ -466,7 +850,7 @@ func (m *MediaInfoAdapter) GetDuration(videoPath string) (float64, error) {func 
 
 // ... etc// ... etc
 
-````
+`````
 
 **Then, just replace in bootstrap:\*\***Depois, basta trocar no bootstrap:\*\*
 
