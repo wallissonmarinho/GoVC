@@ -26,7 +26,7 @@ func NewCLIConfig() (*CLIConfig, error) {
 
 	args := flag.Args()
 	if len(args) < 1 {
-		return nil, fmt.Errorf("usage: govc [-p <num_workers>] [-logs] <directory>\n  -logs: keep FFmpeg logs (by default they are deleted)")
+		return nil, fmt.Errorf("usage: govc [-p <num_workers>] [--logs] <directory>\n  --logs: keep FFmpeg logs (by default logs are deleted after successful conversion)")
 	}
 
 	dir := args[0]

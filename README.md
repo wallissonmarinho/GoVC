@@ -46,8 +46,8 @@ go run ./cmd/govc convert -p 4 /path/to/videos
 
 **`--logs BOOLEAN`** (Boolean)
 
-- **Default**: `true` - keeps logs in `mp4/<name>.log` for each converted video
-- **With `--logs=false`**: temporary logs are removed after successful conversion
+- **Default**: `false` - deletes successful logs after conversion (keeps error logs)
+- **With `--logs` or `--logs=true`**: keeps logs in `mp4/<name>.log` for each converted video
 - **Note**: Error logs are always kept for diagnostics (regardless of flag)
 - Logs contain ffmpeg stderr output for troubleshooting
 

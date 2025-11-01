@@ -85,8 +85,8 @@ func (h *ConvertCommandHandler) BuildCommand() *urfavecli.Command {
 			},
 			&urfavecli.BoolFlag{
 				Name:  "logs",
-				Value: true,
-				Usage: "Save per-file logs (use --logs=false to delete successful logs)",
+				Value: false,
+				Usage: "Keep per-file logs (default: delete successful logs)",
 			},
 		},
 		Action: h.Execute,
