@@ -8,7 +8,7 @@
 
 1. **Quer começar logo?** → `README.md`
 2. **Quer ver um resumo?** → `EXECUTIVE_SUMMARY.md`
-3. **Quer comparar?** → `BEFORE_AFTER.md`
+3. **Quer entender a arquitetura?** → `HEXAGONAL_ARCHITECTURE.md`
 
 ---
 
@@ -38,9 +38,9 @@
 
 ## 📊 Análise Comparativa
 
-1. **Antes vs Depois** → `BEFORE_AFTER.md`
-2. **Transformação realizada** → `REFACTORING_COMPLETE.md`
-3. **Benefícios entregues** → `EXECUTIVE_SUMMARY.md`
+1. **Transformação realizada** → `REFACTORING_COMPLETE.md`
+2. **Benefícios entregues** → `EXECUTIVE_SUMMARY.md`
+3. **Detalhes técnicos** → `PROJECT_STATUS.md`
 
 ---
 
@@ -80,11 +80,6 @@ EXECUTIVE_SUMMARY.md            (Resumo executivo)
 ├─ O que foi entregue
 ├─ Números finais
 └─ Sign-off
-
-BEFORE_AFTER.md                 (Análise comparativa)
-├─ Transformação visual
-├─ Fluxo antes vs depois
-└─ Padrões implementados
 
 CHECKLIST.md                    (Checklist completo)
 ├─ Objetivos alcançados
@@ -135,8 +130,8 @@ internal/adapters/ffmpeg/
 ### Para Arquitetos que Querem Entender
 
 1. `HEXAGONAL_ARCHITECTURE.md` - Visão geral
-2. `BEFORE_AFTER.md` - Transformação realizada
-3. `PROJECT_STATUS.md` - Componentes detalhados
+2. `PROJECT_STATUS.md` - Componentes detalhados
+3. `REFACTORING_COMPLETE.md` - Transformação realizada
 4. Ver código em `internal/core/`
 
 ### Para Engenheiros que Querem Estender
@@ -151,7 +146,7 @@ internal/adapters/ffmpeg/
 1. `EXECUTIVE_SUMMARY.md` - Resumo completo
 2. `REFACTORING_COMPLETE.md` - Métricas
 3. `CHECKLIST.md` - Validações
-4. `BEFORE_AFTER.md` - ROI da refatoração
+4. `PROJECT_STATUS.md` - Detalhes técnicos
 
 ---
 
@@ -164,7 +159,7 @@ README.md (2 min)
     ↓
 EXECUTIVE_SUMMARY.md (3 min)
     ↓
-BEFORE_AFTER.md (5 min)
+HEXAGONAL_ARCHITECTURE.md (5 min)
     ↓
 Pronto para usar/estender!
 ```
@@ -195,9 +190,8 @@ Ler TODOS os documentos em ordem:
 4. PROJECT_STATUS.md
 5. REFACTORING_COMPLETE.md
 6. EXECUTIVE_SUMMARY.md
-7. BEFORE_AFTER.md
-8. CHECKLIST.md
-9. Ver código em internal/
+7. CHECKLIST.md
+8. Ver código em internal/
     ↓
 Domínio total do projeto!
 ```
@@ -224,7 +218,7 @@ Domínio total do projeto!
 
 ### "O que mudou?"
 
-→ `BEFORE_AFTER.md`
+→ `REFACTORING_COMPLETE.md`
 
 ### "Status do projeto?"
 
@@ -304,12 +298,11 @@ Domínio total do projeto!
 | Arquitetura | `HEXAGONAL_ARCHITECTURE.md` | 10 min |
 | Estender    | `EXTENSION_GUIDE.md`        | 10 min |
 | Status      | `EXECUTIVE_SUMMARY.md`      | 5 min  |
-| Comparação  | `BEFORE_AFTER.md`           | 10 min |
 | Detalhes    | `PROJECT_STATUS.md`         | 15 min |
 | Validações  | `CHECKLIST.md`              | 10 min |
 | Resumo      | `REFACTORING_COMPLETE.md`   | 5 min  |
 
-**Total: ~70 minutos para leitura completa**
+**Total: ~60 minutos para leitura completa**
 
 ---
 
