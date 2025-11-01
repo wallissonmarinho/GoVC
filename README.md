@@ -34,22 +34,26 @@ go run ./cmd/govc convert -p 4 /path/to/videos
 
 ---
 
-## 📋 Behaviors
+## 📋 `convert` Command Behaviors
 
-### Parallelism
+### Flags
 
-- Use `-p N` to control how many `ffmpeg` processes run simultaneously
+**`-p, --workers N`** (Integer)
+
+- Controls how many `ffmpeg` processes run simultaneously
 - **Default**: number of CPUs on the machine
 - Recommended: `-p 2` on machines with few cores, `-p 4` on modern machines
 
-### Logs
+**`--logs BOOLEAN`** (Boolean)
 
-- **By default** (`--logs` or `--logs=true`): keeps logs in `mp4/<name>.log` for each converted video
-- **Delete logs** with `--logs=false`: temporary logs are removed after successful conversion
-- **Error logs** are always kept for diagnostics (regardless of `--logs` flag)
+- **Default**: `true` - keeps logs in `mp4/<name>.log` for each converted video
+- **With `--logs=false`**: temporary logs are removed after successful conversion
+- **Note**: Error logs are always kept for diagnostics (regardless of flag)
 - Logs contain ffmpeg stderr output for troubleshooting
 
-### Subtitles
+### Features
+
+**Subtitle Support**
 
 Supports **two types**:
 
