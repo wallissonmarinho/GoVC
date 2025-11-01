@@ -5,8 +5,9 @@
 ```
 ANTES                              DEPOIS
 ─────────────────────────────────────────────────────────
-1 arquivo monolítico    →    15+ arquivos organizados
-418+ linhas (main.go)   →    150 linhas (cmd/govc/main.go)
+1 arquivo monolítico    →    18+ arquivos organizados
+418+ linhas (main.go)   →    20 linhas (cmd/govc/main.go)
+flag package            →    urfave/cli/v2 framework
 Sem architecture         →    Hexagonal Architecture clara
 Testability: ⭐       →    Testability: ⭐⭐⭐⭐⭐
 Maintainability: ⭐    →    Maintainability: ⭐⭐⭐⭐⭐
@@ -49,12 +50,12 @@ GoVC/
 │       ├── cli/                          ← Input Adapter
 │       │   ├── config.go
 │       │   ├── logger.go
-│       │   ├── command_executor.go       ← NEW: Orchestrates commands
-│       │   ├── convert_command.go        ← NEW: Wraps ConversionService
-│       │   ├── config_mock.go
-│       │   ├── logger_mock.go
-│       │   ├── command_executor_mock.go  ← NEW: Mock for testing
-│       │   └── convert_command_mock.go   ← NEW: Mock for testing
+│       │   ├── command_executor.go
+│       │   ├── convert_command.go
+│       │   └── *_mock.go (4 files)      ← Mocks for testing
+│       ├── commands/                     ← NEW: urfave/cli Handlers
+│       │   ├── convert.go               ← ConvertCommandHandler
+│       │   └── factory.go               ← CommandFactory
 │       ├── filesystem/                   ← Output Adapter
 │       │   ├── adapter.go
 │       │   └── adapter_mock.go
@@ -181,13 +182,15 @@ service := services.NewConversionService(..., mockConverter, ...)
 | `adapters/cli/command_executor.go`    | ~40      | Orchestrates command execution     |
 | `adapters/cli/convert_command.go`     | ~25      | Wraps ConversionService as command |
 | `adapters/cli/*_mock.go` (4 files)    | ~40      | Mocks for testing                  |
+| `adapters/commands/convert.go`        | ~75      | ConvertCommandHandler (urfave/cli) |
+| `adapters/commands/factory.go`        | ~25      | CommandFactory (builds commands)   |
 | `adapters/filesystem/adapter.go`      | ~100     | Output: File System                |
 | `adapters/filesystem/adapter_mock.go` | ~35      | Mock for testing                   |
 | `adapters/ffmpeg/adapter.go`          | ~150     | Output: FFmpeg Converter           |
 | `adapters/ffmpeg/adapter_mock.go`     | ~25      | Mock for testing                   |
-| `cmd/govc/main.go`                    | ~45      | Bootstrap (Dependency Injection)   |
+| `cmd/govc/main.go`                    | ~20      | Bootstrap (Dependency Injection)   |
 | `main.go` (root)                      | ~3       | Stub                               |
-| **TOTAL**                             | **~750** | ✅ Bem organizado                  |
+| **TOTAL**                             | **~850** | ✅ Bem organizado                  |
 
 ---
 
@@ -198,15 +201,27 @@ service := services.NewConversionService(..., mockConverter, ...)
 cd /Users/wallissonmarinho/www/GoVC
 go build -o govc ./cmd/govc
 
-# 2. Run with command flag
-./govc -cmd convert -p 4 /caminho/videos
+# 2. Show help
+./govc --help
+./govc convert --help
 
-# 3. Or default (convert is default command)
-./govc /caminho/videos
+# 3. Run convert with default settings (uses system CPU count)
+./govc convert /caminho/videos
 
-# 4. Or directly with go run
-go run ./cmd/govc -cmd convert -p 2 -logs=false /caminho/videos
+# 4. Run with 4 parallel workers
+./govc convert -p 4 /caminho/videos
+
+# 5. Run and keep logs
+./govc convert -p 4 --logs /caminho/videos
+
+# 6. Run and delete successful logs
+./govc convert -p 2 --logs=false /caminho/videos
+
+# Or with go run:
+go run ./cmd/govc convert -p 2 /caminho/videos
 ```
+
+**Framework:** Uses [urfave/cli/v2](https://cli.urfave.org/) - professional-grade CLI framework
 
 ---
 

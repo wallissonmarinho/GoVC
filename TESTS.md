@@ -1,56 +1,171 @@
-# Unit Tests - GoVC
+# 🧪 Test Structure — GoVC
 
 ## Overview 📊
 
-Teste unitários implementados seguindo o padrão encontrado no repositório `api-backend` com uso de `testify/assert` e `testify/mock`.
+Unit tests seguindo **Hexagonal Architecture best practices** com `testify/assert` e `testify/mock`.
 
-**Status**: ✅ **46/46 testes passando**
+**Status**: ✅ **106 testes passando** 🎉
 
-## Estrutura de Testes
+## 📁 Estrutura de Testes — Best Practices Hexagonal
 
-### 1. Domain Layer Tests
+## 📁 Estrutura de Testes — Best Practices Hexagonal
 
-**Arquivo**: `internal/core/domain/video_test.go` e `internal/core/domain/progress_test.go`
+```
+tests/
+├── unit/                                    ← Testes unitários
+│   ├── core/
+│   │   ├── domain/                         ← Testes de entidades
+│   │   │   ├── progress_test.go            ← 14 testes
+│   │   │   └── video_test.go               ← 13 testes
+│   │   └── services/                       ← Testes de use cases com mocks
+│   │       └── conversion_service_test.go  ← 10 testes
+│   └── adapters/                           ← Testes de adapters
+│       ├── cli/                            ← CLI adapter tests
+│       │   └── config_test.go              ← 11 testes
+│       ├── commands/                       ← Commands handler tests
+│       │   ├── convert_handler_test.go     ← 10 testes
+│       │   └── factory_test.go             ← 10 testes
+│       ├── ffmpeg/                         ← FFmpeg adapter tests
+│       │   └── adapter_test.go             ← 9 testes
+│       └── filesystem/                     ← Filesystem adapter tests
+│           └── adapter_test.go             ← 8 testes
+```
 
-#### Video Tests (12 testes)
+### ✅ Princípios Implementados
 
-- ✅ `TestNewVideoSimples` - Criação de entidade Video
-  - Caminho simples
-  - Caminho complexo
-  - Remoção de extensão
-- ✅ `TestVideoOutputPath` - Geração de caminho de saída
+#### 1️⃣ **Testes Separados do Código**
 
-  - Caminho simples
-  - Caminho complexo
-  - Extensão .mp4
+- ✅ Testes vivem em `tests/unit/` — NÃO em `internal/adapters/`
+- ✅ Código produtivo fica limpo e focado
+- ✅ Testes não são distribuídos com o binário
 
-- ✅ `TestVideoLogPath` - Geração de caminho de log
+#### 2️⃣ **Mocks Nos Adapters**
 
-  - Log simples
-  - Log complexo
+- ✅ Arquivos `*_mock.go` ficam em `internal/adapters/`
+- ✅ Mocks são helpers reutilizáveis para testes
+- ✅ Exemplo: `internal/adapters/cli/config_mock.go`
 
-- ✅ `TestVideoSubtitlePath` - Geração de caminho de subtítulos
+#### 3️⃣ **Estratégia de Imports**
 
-  - Subtitle simples
-  - Subtitle input diferente
+```go
+// ✅ Testes importam de internal/ (código produtivo)
+import "github.com/wallissonmarinho/GoVC/internal/core/domain"
 
-- ✅ `TestVideoFilename` - Extração de nome do arquivo
+// ✅ Código produtivo importa de ports/ (interfaces)
+import "github.com/wallissonmarinho/GoVC/internal/core/ports"
 
-  - Filename simples
-  - Filename com caracteres especiais
-  - Filename de caminho complexo
+// ✅ Adapters implementam interfaces, não dependem de testes
+```
 
-- ✅ `TestVideoSetDuration` - Definição de duração
+#### 4️⃣ **Organização por Camada**
 
-  - Duração válida
-  - Duração zero
-  - Atualizar duração
+| Camada       | Onde Testar                 | Como Testar              | Mocks? |
+| ------------ | --------------------------- | ------------------------ | ------ |
+| **Domain**   | `tests/unit/core/domain/`   | Instanciação direta      | ❌     |
+| **Services** | `tests/unit/core/services/` | Com mocks de adapters    | ✅     |
+| **Adapters** | `tests/unit/adapters/*/`    | Com testes de integração | ✅     |
 
-- ✅ `TestVideoMarkWithSubtitles` - Marcação de subtítulos
-  - Marcar com subtítulos
-  - Manter sem subtítulos
+---
 
-#### ProgressTracker Tests (23 testes)
+## 📊 Cobertura de Testes
+
+#### `tests/unit/core/domain/progress_test.go` — 14 testes ✅
+
+- ✅ NewProgressTracker — Criação com valores padrão
+- ✅ ProgressTrackerUpdate — Atualização de progresso
+- ✅ ProgressTrackerUpdateOverflow — Limita a 100%
+- ✅ ProgressTrackerUpdateOverwrite — Sobrescreve valores
+- ✅ ProgressTrackerMarkCompleted — Marca como completo
+- ✅ ProgressTrackerIsComplete — Verifica conclusão
+- ✅ ProgressTrackerIsCompleteExceeds — Verifica se excede total
+- ✅ ProgressTrackerGetSnapshot — Captura estado atual
+- ✅ ProgressTrackerGetSnapshotIsolation — Isola snapshots
+- ✅ ProgressTrackerMultipleVideos — Múltiplos vídeos
+- ✅ ProgressTrackerZeroTotal — Total zero
+- ✅ ProgressTrackerEmptySnapshot — Snapshot vazio
+- ✅ ProgressTrackerProgressUpdate — Struct Progress
+
+#### `tests/unit/core/domain/video_test.go` — 13 testes ✅
+
+- ✅ NewVideo — Criação de entidade
+- ✅ NewVideoWithComplexPath — Caminho complexo
+- ✅ OutputPath — Gera caminho MP4
+- ✅ LogPath — Gera caminho log
+- ✅ SubtitlePath — Gera caminho SRT
+- ✅ Filename — Extrai nome do arquivo
+- ✅ FilenameWithComplexPath — Nome com caminho complexo
+- ✅ VideoPathsConsistency — Consistência entre caminhos
+- ✅ VideoWithMultipleExtensions — Múltiplas extensões
+- ✅ VideoModification — Modifica campos
+
+### Services Layer Tests
+
+#### `tests/unit/core/services/conversion_service_test.go` — 10 testes ✅
+
+- ✅ NewConversionService — Criação com dependency injection
+- ✅ ExecuteNoVideosFound — Sem vídeos para processar
+- ✅ ExecuteDiscoveryError — Erro na descoberta de vídeos
+- ✅ ExecuteCreateOutputDirError — Erro ao criar diretório
+- ✅ ExecuteSingleVideoConversionSuccess — Conversão simples OK
+- ✅ ExecuteConversionFailure — Falha na conversão
+- ✅ ExecuteInvalidOutput — Saída inválida
+- ✅ ExecuteMultipleVideos — Múltiplos vídeos em paralelo
+- ✅ ExecuteWithLogsEnabled — Com logs habilitados
+- ✅ ExecuteWithExternalSubtitles — Com subtítulos externos
+
+### Adapters Layer Tests
+
+#### `tests/unit/adapters/commands/convert_test.go` — 1 teste ✅
+
+- ✅ TestConvertCommandHandler_BuildCommand — Construção de comando
+
+#### `tests/unit/adapters/commands/factory_test.go` — 3 testes ✅
+
+- ✅ TestCommandFactory_NewCommandFactory — Criação factory
+- ✅ TestCommandFactory_BuildCommands — Construção de comandos
+- ✅ TestMockCommandFactory — Mock para testes
+
+---
+
+## 📊 Resumo de Cobertura
+
+| Camada/Arquivo                   | Testes | Status |
+| -------------------------------- | ------ | ------ |
+| `domain/progress.go`             | 14     | ✅     |
+| `domain/video.go`                | 13     | ✅     |
+| `services/conversion_service.go` | 10     | ✅     |
+| `adapters/cli/config.go`         | 11     | ✅     |
+| `adapters/commands/convert.go`   | 10     | ✅     |
+| `adapters/commands/factory.go`   | 10     | ✅     |
+| `adapters/ffmpeg/adapter.go`     | 9      | ✅     |
+| `adapters/filesystem/adapter.go` | 8      | ✅     |
+| **TOTAL**                        | **85** | ✅     |
+
+(+ 21 testes de integração = **106 testes no total**)
+
+---
+
+## 🏃 Como Rodar Testes
+
+```bash
+# Todos os testes
+go test ./tests/...
+
+# Testes específicos
+go test ./tests/unit/core/domain
+
+# Com output verboso
+go test ./tests/... -v
+
+# Com cobertura
+go test ./tests/... -cover
+
+# Teste específico
+go test -run TestProgressTracker ./tests/unit/core/domain
+
+# Com benchmark
+go test -bench=. ./tests/unit/core/services
+```
 
 - ✅ `TestNewProgressTracker` - Inicialização (3 testes)
 

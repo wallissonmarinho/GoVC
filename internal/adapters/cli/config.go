@@ -18,6 +18,7 @@ type CLIConfig struct {
 }
 
 // NewCLIConfig creates a new CLI configuration by parsing flags.
+// Deprecated: Use NewCLIConfigFromContext instead.
 func NewCLIConfig() (*CLIConfig, error) {
 	workers := flag.Int("p", runtime.NumCPU(), "number of parallel ffmpeg processes")
 	saveLogs := flag.Bool("logs", false, "save per-file ffmpeg logs to mp4/*.log")
@@ -38,6 +39,24 @@ func NewCLIConfig() (*CLIConfig, error) {
 		outputDir: filepath.Join(dir, "mp4"),
 		workers:   *workers,
 		saveLogs:  *saveLogs,
+	}, nil
+}
+
+// NewCLIConfigFromContext creates a new CLI configuration from urfave/cli context.
+func NewCLIConfigFromContext(workers int, saveLogs bool, inputDir string) (*CLIConfig, error) {
+	if inputDir == "" {
+		return nil, fmt.Errorf("input directory is required")
+	}
+
+	if workers < 1 {
+		workers = 1
+	}
+
+	return &CLIConfig{
+		inputDir:  inputDir,
+		outputDir: filepath.Join(inputDir, "mp4"),
+		workers:   workers,
+		saveLogs:  saveLogs,
 	}, nil
 }
 

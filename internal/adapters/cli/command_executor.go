@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/wallissonmarinho/GoVC/internal/core/ports"
@@ -29,12 +30,15 @@ func (ce *CommandExecutor) Register(name string, cmd ports.ServiceCommand) {
 func (ce *CommandExecutor) Execute(name string) error {
 	cmd := ce.commands[name]
 	if cmd == nil {
-		log.Fatalf("❌ Unknown command: %s", name)
+		err := fmt.Errorf("unknown command: %s", name)
+		log.Printf("❌ %v", err)
+		return err
 	}
 
 	log.Printf("▶️  Starting %s...\n", cmd.Name())
 	if err := cmd.Execute(); err != nil {
-		log.Fatalf("❌ %s failed: %v", cmd.Name(), err)
+		log.Printf("❌ %s failed: %v", cmd.Name(), err)
+		return err
 	}
 	log.Printf("✅ %s completed!\n", cmd.Name())
 	return nil

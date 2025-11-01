@@ -10,8 +10,7 @@ This is the reorganization of the GoVC project applying **Hexagonal Architecture
 GoVC/
 ├── cmd/
 │   └── govc/
-│       ├── main.go              ← Entry point (Bootstrap)
-│       └── ...
+│       └── main.go              ← Entry point (Bootstrap) - minimal and clean
 ├── internal/                    ← Private code (not exportable)
 │   ├── core/                    ← Heart: pure business logic
 │   │   ├── domain/              ← Entities (Video, Conversion, Progress)
@@ -35,10 +34,10 @@ GoVC/
 │       │   ├── logger.go        ← Implements ProgressReporterPort
 │       │   ├── command_executor.go       ← Implements CommandExecutorPort
 │       │   ├── convert_command.go        ← Implements ServiceCommand
-│       │   ├── config_mock.go   ← Mock for testing
-│       │   ├── logger_mock.go   ← Mock for testing
-│       │   ├── command_executor_mock.go  ← Mock for testing
-│       │   └── convert_command_mock.go   ← Mock for testing
+│       │   ├── *_mock.go        ← Mocks for testing (one per adapter)
+│       ├── commands/            ← Command Handlers (urfave/cli integration)
+│       │   ├── convert.go       ← ConvertCommandHandler (handles convert command)
+│       │   └── factory.go       ← CommandFactory (builds all CLI commands)
 │       ├── filesystem/          ← Output: File system operations
 │       │   ├── adapter.go       ← Implements VideoDiscoveryPort, FileSystemPort
 │       │   └── adapter_mock.go  ← Mock for testing
@@ -65,11 +64,16 @@ GoVC/
 
 #### 2️⃣ **Adapters (Sides — Inputs)**
 
-- **CLI** (`internal/adapters/cli/`): Reads user arguments and commands
+- **CLI** (`internal/adapters/cli/`): Reads user arguments and configurations
+
   - `CLIConfig` → implements `ConfigPort`
   - `LoggerReporter` → implements `ProgressReporterPort`
   - `CommandExecutor` → implements `CommandExecutorPort` (orchestrates commands)
   - `ConvertCommand` → implements `ServiceCommand` (wraps ConversionService)
+
+- **Commands** (`internal/adapters/commands/`): urfave/cli command handlers
+  - `ConvertCommandHandler` → handles the convert command execution
+  - `CommandFactory` → builds all available CLI commands (easy to add new commands)
 
 #### 3️⃣ **Adapters (Sides — Outputs)**
 
@@ -110,27 +114,29 @@ go build -o govc ./cmd/govc
 #### Run
 
 ```bash
-# With explicit command flag
-./govc -cmd convert -p 4 -logs=true /path/with/videos.mkv
-```
+# Convert with default settings (uses system CPU count)
+./govc convert /path/with/videos.mkv
 
-Or directly (convert is default):
+# Convert with 2 parallel workers
+./govc convert -p 2 /path/with/videos.mkv
 
-```bash
-./govc /path/with/videos.mkv
-```
+# Convert and keep logs
+./govc convert -p 4 --logs /path/with/videos.mkv
 
-Or with go run:
+# Convert and delete successful logs
+./govc convert -p 4 --logs=false /path/with/videos.mkv
 
-```bash
-go run ./cmd/govc -cmd convert -p 4 /path/with/videos.mkv
+# Show help
+./govc --help
+./govc convert --help
 ```
 
 **Flags:**
 
-- `-cmd` : command to execute (default: `convert`)
-- `-p N` : number of parallel workers (default: #CPUs)
-- `-logs=true|false` : keep per-file logs in mp4/ directory (default: true; false deletes successful logs)
+- `-p, --workers N` : number of parallel workers (default: #CPUs)
+- `--logs` : save per-file logs in mp4/ directory (default: true; use --logs=false to delete successful logs)
+
+**Framework:** Uses [urfave/cli/v2](https://cli.urfave.org/) for robust CLI command handling.
 
 ---
 
@@ -138,18 +144,26 @@ go run ./cmd/govc -cmd convert -p 4 /path/with/videos.mkv
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      cmd/govc/main.go                       │ ← Bootstrap
-│                    (Dependency Injection)                   │
+│                 urfave/cli App Bootstrap                    │
+│                   cmd/govc/main.go                          │
+│            (CommandFactory builds all commands)             │
 └────────────────────────┬────────────────────────────────────┘
-                         │ creates adapters + service
+                         │ routes to command handler
+                         ↓
+┌─────────────────────────────────────────────────────────────┐
+│         ConvertCommandHandler (adapter)                     │
+│      (parses urfave/cli context, extracts args)            │
+│     (creates adapters, injects into service)               │
+└────────────────────────┬────────────────────────────────────┘
+                         │ creates service + calls Execute
                          ↓
 ┌─────────────────────────────────────────────────────────────┐
 │            ConversionService (Use Case)                     │
 │        ┌─────────────────────────────────────┐              │
 │        │ Execute() {                         │              │
 │        │  - Discover videos                  │              │
-│        │  - Setup progress                   │              │
-│        │  - Orchestrate conversion           │              │
+│        │  - Setup progress tracking          │              │
+│        │  - Orchestrate parallel conversion  │              │
 │        │ }                                   │              │
 │        └─────────────────────────────────────┘              │
 └────────────────────────┬────────────────────────────────────┘
@@ -161,8 +175,9 @@ go run ./cmd/govc -cmd convert -p 4 /path/with/videos.mkv
             │Adapt │ │Adapt │ │Adap│ │   Adapter   │
             └──────┘ └──────┘ └────┘ └─────────────┘
                ↓        ↓        ↓             ↓
-         Parse Flags Discover Videos Convert  Report
-                         FS                   Logs
+         Parse Flags Discover Convert      Report
+              & Logs   Videos    & Embed   Progress
+                        FS    Subtitles      Logs
 ```
 
 ---
@@ -183,14 +198,21 @@ fmt.Printf("Duration: %.2f seconds\n", duration)
 1. **New Input**: Web API
 
    - New input adapter (`internal/adapters/http/`)
+   - Register new handler in `CommandFactory`
    - Same service, new entry point
 
-2. **New Output**: AWS S3
+2. **New Command**: Video validation
+
+   - New handler (`internal/adapters/commands/validate.go`)
+   - Add to `CommandFactory.BuildCommands()`
+   - Clean separation of concerns
+
+3. **New Output**: AWS S3
 
    - New adapter (`internal/adapters/s3/`)
    - Same service, new output
 
-3. **Unit Tests**:
+4. **Unit Tests**:
 
    ```go
    // Mock adapter
@@ -198,9 +220,6 @@ fmt.Printf("Duration: %.2f seconds\n", duration)
    service := services.NewConversionService(..., mockConverter, ...)
    // Test without real ffmpeg!
    ```
-
-4. **Enhanced CLI**: Use `cobra` or `urfave/cli`
-   - More robust CLI adapter
 
 ---
 

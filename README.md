@@ -15,17 +15,21 @@ go build -o govc ./cmd/govc
 ### Run
 
 ```bash
-# Convert with 4 parallel workers (default: number of CPUs)
-./govc -cmd convert -p 4 /path/to/videos
+# Show help
+./govc --help
+./govc convert --help
+
+# Convert with default settings (uses system CPU count)
+./govc convert /path/to/videos
+
+# Convert with 4 parallel workers
+./govc convert -p 4 /path/to/videos
 
 # Without saving temporary logs
-./govc -cmd convert -p 4 -logs=false /path/to/videos
+./govc convert -p 4 --logs=false /path/to/videos
 
-# Direct with go run
-go run ./cmd/govc -cmd convert -p 4 /path/to/videos
-
-# Or default (convert is default command)
-./govc /path/to/videos
+# With go run
+go run ./cmd/govc convert -p 4 /path/to/videos
 ```
 
 ---
@@ -40,9 +44,9 @@ go run ./cmd/govc -cmd convert -p 4 /path/to/videos
 
 ### Logs
 
-- **By default** (`-logs=true`): keeps logs in `mp4/<name>.log` for each converted video
-- **Delete logs** with `-logs=false`: temporary logs are removed after successful conversion
-- **Error logs** are always kept for diagnostics (regardless of `-logs` flag)
+- **By default** (`--logs` or `--logs=true`): keeps logs in `mp4/<name>.log` for each converted video
+- **Delete logs** with `--logs=false`: temporary logs are removed after successful conversion
+- **Error logs** are always kept for diagnostics (regardless of `--logs` flag)
 - Logs contain ffmpeg stderr output for troubleshooting
 
 ### Subtitles
@@ -95,10 +99,11 @@ GoVC/
 ├── cmd/govc/main.go                    ← Entry point (Bootstrap)
 ├── internal/core/
 │   ├── domain/                         ← Pure entities (Video, Conversion)
-│   ├── ports/ports.go                  ← Interfaces (contracts)
+│   ├── ports/                          ← Interfaces (contracts)
 │   └── services/conversion_service.go  ← Use case
 └── internal/adapters/
-    ├── cli/                            ← Input: CLI
+    ├── cli/                            ← Input: CLI adapter
+    ├── commands/                       ← urfave/cli command handlers
     ├── filesystem/                     ← Output: File system
     └── ffmpeg/                         ← Output: Converter
 ```
@@ -130,7 +135,7 @@ choco install ffmpeg
 ### Example 1: Simple Conversion
 
 ```bash
-go run ./cmd/govc -cmd convert /videos
+./govc convert /videos
 ```
 
 - Uses all CPUs
@@ -139,7 +144,7 @@ go run ./cmd/govc -cmd convert /videos
 ### Example 2: Control Workers and Logs
 
 ```bash
-go run ./cmd/govc -cmd convert -p 2 -logs=false /videos
+./govc convert -p 2 --logs=false /videos
 ```
 
 - 2 parallel workers
@@ -150,7 +155,7 @@ go run ./cmd/govc -cmd convert -p 2 -logs=false /videos
 
 ```bash
 go build -o govc-v1.0 ./cmd/govc
-./govc-v1.0 -cmd convert -p 4 /media/movies
+./govc-v1.0 convert -p 4 /media/movies
 ```
 
 ---
