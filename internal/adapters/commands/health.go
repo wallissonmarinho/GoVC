@@ -29,7 +29,7 @@ func (h *HealthCommandHandler) Execute(c *urfavecli.Context) error {
 	}
 
 	executor := cli.NewCommandExecutor()
-	executor.Register("health", cli.NewConvertCommand(exec, "health"))
+	executor.Register("health", cli.NewHealthCommand(exec, "health"))
 
 	if err := executor.Execute("health"); err != nil {
 		return urfavecli.Exit(fmt.Sprintf("❌ Command failed: %v", err), 1)
