@@ -5,12 +5,11 @@ import (
 	"os"
 
 	urfavecli "github.com/urfave/cli/v2"
-	"github.com/wallissonmarinho/GoVC/internal/adapters/commands"
 )
 
 func main() {
-	// Build commands using factory pattern
-	commandFactory := commands.NewCommandFactory()
+	// Build commands using factory pattern with a provided executor factory
+	commandFactory := BuildCommandFactory()
 
 	app := &urfavecli.App{
 		Name:        "govc",

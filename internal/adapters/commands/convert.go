@@ -2,65 +2,36 @@ package commands
 
 import (
 	"fmt"
-	"runtime"
 
 	urfavecli "github.com/urfave/cli/v2"
 	"github.com/wallissonmarinho/GoVC/internal/adapters/cli"
-	"github.com/wallissonmarinho/GoVC/internal/adapters/ffmpeg"
-	"github.com/wallissonmarinho/GoVC/internal/adapters/filesystem"
-	"github.com/wallissonmarinho/GoVC/internal/core/services"
 )
 
 // ConvertCommandHandler handles the convert command execution
-type ConvertCommandHandler struct{}
+type ConvertCommandHandler struct {
+	executorFactory ExecutorFactory
+}
 
-// NewConvertCommandHandler creates a new convert command handler
-func NewConvertCommandHandler() *ConvertCommandHandler {
-	return &ConvertCommandHandler{}
+// NewConvertCommandHandler creates a new convert command handler that uses
+// the provided ExecutorFactory to obtain the concrete executor at runtime.
+func NewConvertCommandHandler(factory ExecutorFactory) *ConvertCommandHandler {
+	return &ConvertCommandHandler{executorFactory: factory}
 }
 
 // Execute processes the convert command with urfave/cli context
 func (h *ConvertCommandHandler) Execute(c *urfavecli.Context) error {
-	// Extract arguments from urfave/cli context
-	workers := c.Int("workers")
-	saveLogs := c.Bool("logs")
-	inputDir := c.Args().First()
-
-	if inputDir == "" {
-		return urfavecli.Exit("❌ Input directory is required", 1)
+	if h.executorFactory == nil {
+		return urfavecli.Exit("executor factory not provided", 1)
 	}
 
-	// Apply default workers if not specified or invalid
-	if workers <= 0 {
-		workers = runtime.NumCPU()
-	}
-
-	// Adapters: Input
-	cliConfig, err := cli.NewCLIConfigFromContext(workers, saveLogs, inputDir)
+	exec, err := h.executorFactory(c)
 	if err != nil {
 		return urfavecli.Exit(fmt.Sprintf("Configuration error: %v", err), 1)
 	}
 
-	// Adapters: Discovery & Conversion
-	discoveryAdapter := filesystem.NewFilesystemAdapter()
-	converterAdapter := ffmpeg.NewFFmpegAdapter()
-	fileSystemAdapter := filesystem.NewFilesystemAdapter()
-
-	// Adapters: Output (Reporter)
-	reporterAdapter := cli.NewLoggerReporter()
-
-	// Services (Core Business Logic)
-	conversionService := services.NewConversionService(
-		discoveryAdapter,
-		converterAdapter,
-		fileSystemAdapter,
-		reporterAdapter,
-		cliConfig,
-	)
-
 	// Commands (Adapters) - execute conversion
 	executor := cli.NewCommandExecutor()
-	executor.Register("convert", cli.NewConvertCommand(conversionService, "conversion"))
+	executor.Register("convert", cli.NewConvertCommand(exec, "conversion"))
 
 	// Execute the command
 	if err := executor.Execute("convert"); err != nil {

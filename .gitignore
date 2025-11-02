@@ -26,6 +26,10 @@ vendor/
 /dist/
 govc
 
+# keep cmd/govc tracked
+!cmd/govc/
+!cmd/govc/*
+
 # IDE and editor
 .vscode/
 .idea/

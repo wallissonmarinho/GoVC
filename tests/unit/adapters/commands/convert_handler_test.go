@@ -6,17 +6,23 @@ import (
 	"github.com/stretchr/testify/assert"
 	urfavecli "github.com/urfave/cli/v2"
 	"github.com/wallissonmarinho/GoVC/internal/adapters/commands"
+	"github.com/wallissonmarinho/GoVC/internal/core/ports"
 )
+
+// dummyFactory returns a no-op executor for tests
+var dummyFactory commands.ExecutorFactory = func(c *urfavecli.Context) (ports.Executor, error) {
+	return nil, nil
+}
 
 // TestConvertCommandHandler tests the convert command handler
 func TestConvertCommandHandler(t *testing.T) {
 	t.Run("NewConvertCommandHandler", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		assert.NotNil(t, handler)
 	})
 
 	t.Run("BuildCommand_ReturnsValidCommand", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		assert.NotNil(t, cmd)
@@ -27,7 +33,7 @@ func TestConvertCommandHandler(t *testing.T) {
 	})
 
 	t.Run("BuildCommand_HasWorkersFlagAlias", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		// Find the workers flag
@@ -44,7 +50,7 @@ func TestConvertCommandHandler(t *testing.T) {
 	})
 
 	t.Run("BuildCommand_HasLogsFlag", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		// Find the logs flag
@@ -61,7 +67,7 @@ func TestConvertCommandHandler(t *testing.T) {
 	})
 
 	t.Run("BuildCommand_HasDescription", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		assert.NotEmpty(t, cmd.Description)
@@ -70,7 +76,7 @@ func TestConvertCommandHandler(t *testing.T) {
 	})
 
 	t.Run("BuildCommand_FlagsHaveCorrectTypes", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		flagCount := len(cmd.Flags)
@@ -97,14 +103,14 @@ func TestConvertCommandHandler(t *testing.T) {
 // TestConvertCommandHandler_Integration tests command handler integration
 func TestConvertCommandHandler_Integration(t *testing.T) {
 	t.Run("BuildCommand_ActionIsCallable", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		assert.NotNil(t, cmd.Action)
 	})
 
 	t.Run("BuildCommand_ProducesValidUrfaveCommand", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 		cmd := handler.BuildCommand()
 
 		// Verify it's a valid urfave/cli Command
@@ -113,7 +119,7 @@ func TestConvertCommandHandler_Integration(t *testing.T) {
 	})
 
 	t.Run("Handler_CanBeReused", func(t *testing.T) {
-		handler := commands.NewConvertCommandHandler()
+		handler := commands.NewConvertCommandHandler(dummyFactory)
 
 		cmd1 := handler.BuildCommand()
 		cmd2 := handler.BuildCommand()
